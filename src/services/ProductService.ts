@@ -79,25 +79,31 @@ export class ProductService {
     try {
       const suggestions: ProductSuggestion[] = [];
       
-      // 1. Keyword-based suggestions
+      // 1. Special handling for specific phone model requests
+      if (context.userMessage) {
+        const phoneSpecificSuggestions = await this.getPhoneSpecificSuggestions(context.userMessage);
+        suggestions.push(...phoneSpecificSuggestions);
+      }
+      
+      // 2. Enhanced keyword-based suggestions
       if (context.keywords && context.keywords.length > 0) {
         const keywordSuggestions = await this.getProductsByKeywords(context.keywords);
         suggestions.push(...keywordSuggestions);
       }
       
-      // 2. Intent-based suggestions
+      // 3. Intent-based suggestions
       if (context.userIntent) {
         const intentSuggestions = await this.getProductsByIntent(context.userIntent);
         suggestions.push(...intentSuggestions);
       }
       
-      // 3. Stage-based suggestions
+      // 4. Stage-based suggestions
       if (context.conversationStage) {
         const stageSuggestions = await this.getProductsByStage(context.conversationStage);
         suggestions.push(...stageSuggestions);
       }
       
-      // 4. Fallback: Popular products
+      // 5. Fallback: Popular products
       if (suggestions.length === 0) {
         const popularSuggestions = await this.getPopularProducts();
         suggestions.push(...popularSuggestions);
@@ -113,19 +119,107 @@ export class ProductService {
     }
   }
 
-  private async getProductsByKeywords(keywords: string[]): Promise<ProductSuggestion[]> {
+  private async getPhoneSpecificSuggestions(userMessage: string): Promise<ProductSuggestion[]> {
+    const lowerMessage = userMessage.toLowerCase();
     const suggestions: ProductSuggestion[] = [];
     
-    for (const keyword of keywords.slice(0, 3)) { // Limit to 3 keywords
+    // Check for specific phone model mentions
+    if (lowerMessage.includes('iphone') || lowerMessage.includes('apple')) {
       try {
-        const result = await this.searchProducts({ q: keyword, limit: 3 });
-        for (const product of result.products) {
+        // First try to search for actual iPhone products
+        const iphoneResults = await this.searchProducts({ q: 'iphone', limit: 3 });
+        for (const product of iphoneResults.products) {
           suggestions.push({
             product,
-            reason: `Matches your interest in "${keyword}"`,
+            reason: 'iPhone model as requested',
+            confidence: 0.9,
+            type: 'keyword'
+          });
+        }
+        
+        // If no iPhone results, try broader smartphone search
+        if (suggestions.length === 0) {
+          const phoneResults = await this.searchProducts({ q: 'smartphone', limit: 3 });
+          for (const product of phoneResults.products) {
+            suggestions.push({
+              product,
+              reason: 'Smartphone alternative to iPhone',
+              confidence: 0.7,
+              type: 'keyword'
+            });
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to search for iPhone products:', error);
+      }
+    }
+    
+    // Check for budget-related keywords
+    if (lowerMessage.includes('budget') || lowerMessage.includes('cheap') || lowerMessage.includes('affordable')) {
+      try {
+        const results = await this.searchProducts({ q: 'phone', limit: 10 });
+        // Sort by price and get cheapest phones
+        const budgetPhones = results.products
+          .filter(p => p.price < 200) // Under $200 for budget
+          .sort((a, b) => a.price - b.price)
+          .slice(0, 3);
+          
+        for (const product of budgetPhones) {
+          suggestions.push({
+            product,
+            reason: 'Budget-friendly phone option',
             confidence: 0.8,
             type: 'keyword'
           });
+        }
+      } catch (error) {
+        console.warn('Failed to search for budget phones:', error);
+      }
+    }
+    
+    return suggestions;
+  }
+
+  private async getProductsByKeywords(keywords: string[]): Promise<ProductSuggestion[]> {
+    const suggestions: ProductSuggestion[] = [];
+    
+    // Enhanced keyword to search term mapping
+    const keywordSearchMap: Record<string, string[]> = {
+      'phone': ['phone', 'smartphone'],
+      'smartphone': ['phone', 'smartphone'], 
+      'iphone': ['iphone', 'apple'],
+      'android': ['android', 'samsung'],
+      'mobile': ['phone', 'smartphone'],
+      'cell': ['phone'],
+      'cellular': ['phone'],
+      'iphone_5': ['iphone'],
+      'iphone_6': ['iphone'],
+      'replacement': ['phone', 'smartphone'],
+      'laptop': ['laptop'],
+      'computer': ['laptop', 'computer'],
+      'tablet': ['tablet'],
+      'beauty': ['beauty', 'skincare'],
+      'fragrance': ['fragrance', 'perfume'],
+      'price': ['phone'], // Default to phone for pricing queries
+      'budget': ['phone'], // Default to phone for budget queries
+      'cheap': ['phone'], // Default to phone for cheap queries
+      'affordable': ['phone'] // Default to phone for affordable queries
+    };
+    
+    for (const keyword of keywords.slice(0, 3)) { // Limit to 3 keywords
+      try {
+        const searchTerms = keywordSearchMap[keyword] || [keyword];
+        
+        for (const searchTerm of searchTerms) {
+          const result = await this.searchProducts({ q: searchTerm, limit: 2 });
+          for (const product of result.products) {
+            suggestions.push({
+              product,
+              reason: `Matches your interest in "${keyword}"`,
+              confidence: 0.8,
+              type: 'keyword'
+            });
+          }
         }
       } catch (error) {
         console.warn(`Failed to search for keyword: ${keyword}`, error);
@@ -136,31 +230,94 @@ export class ProductService {
   }
 
   private async getProductsByIntent(intent: string): Promise<ProductSuggestion[]> {
-    const intentCategoryMap: Record<string, string[]> = {
-      'pricing_inquiry': ['smartphones', 'laptops'],
-      'demo_request': ['laptops', 'smartphones', 'tablets'],
-      'feature_inquiry': ['smartphones', 'laptops', 'tablets'],
-      'comparison_request': ['smartphones', 'laptops'],
-      'purchase_intent': ['smartphones', 'laptops', 'home-decoration'],
-      'general_inquiry': ['smartphones', 'beauty', 'fragrances']
+    const intentCategoryMap: Record<string, { categories: string[], searchTerms?: string[] }> = {
+      'product_recommendation': { 
+        categories: ['smartphones'], 
+        searchTerms: ['phone', 'smartphone', 'iphone'] 
+      },
+      'product_comparison': { 
+        categories: ['smartphones'], 
+        searchTerms: ['phone', 'smartphone'] 
+      },
+      'product_inquiry': { 
+        categories: ['smartphones'], 
+        searchTerms: ['phone', 'smartphone'] 
+      },
+      'pricing_inquiry': { 
+        categories: ['smartphones'], 
+        searchTerms: ['phone', 'smartphone'] 
+      },
+      'demo_request': { 
+        categories: ['smartphones', 'laptops'], 
+        searchTerms: ['phone', 'laptop'] 
+      },
+      'feature_inquiry': { 
+        categories: ['smartphones', 'laptops'], 
+        searchTerms: ['phone', 'laptop'] 
+      },
+      'comparison_request': { 
+        categories: ['smartphones'], 
+        searchTerms: ['phone', 'smartphone'] 
+      },
+      'purchase_intent': { 
+        categories: ['smartphones'], 
+        searchTerms: ['phone', 'smartphone'] 
+      },
+      'general_inquiry': { 
+        categories: ['smartphones'], 
+        searchTerms: ['phone'] 
+      }
     };
 
-    const categories = intentCategoryMap[intent] || ['smartphones'];
+    const intentInfo = intentCategoryMap[intent];
+    if (!intentInfo) {
+      // Fallback to phone search for unknown intents
+      const result = await this.searchProducts({ q: 'phone', limit: 2 });
+      return result.products.map(product => ({
+        product,
+        reason: `Recommended for your inquiry`,
+        confidence: 0.5,
+        type: 'intent'
+      }));
+    }
+
     const suggestions: ProductSuggestion[] = [];
 
-    for (const category of categories.slice(0, 2)) {
-      try {
-        const result = await this.searchProducts({ category, limit: 2 });
-        for (const product of result.products) {
-          suggestions.push({
-            product,
-            reason: `Recommended for ${intent.replace('_', ' ')}`,
-            confidence: 0.7,
-            type: 'intent'
-          });
+    // Use search terms first (more accurate)
+    if (intentInfo.searchTerms) {
+      for (const searchTerm of intentInfo.searchTerms.slice(0, 2)) {
+        try {
+          const result = await this.searchProducts({ q: searchTerm, limit: 2 });
+          for (const product of result.products) {
+            suggestions.push({
+              product,
+              reason: `Recommended for ${intent.replace('_', ' ')}`,
+              confidence: 0.8,
+              type: 'intent'
+            });
+          }
+        } catch (error) {
+          console.warn(`Failed to search for term: ${searchTerm}`, error);
         }
-      } catch (error) {
-        console.warn(`Failed to get products for intent: ${intent}`, error);
+      }
+    }
+
+    // Fallback to category search if no results from search terms
+    if (suggestions.length === 0) {
+      for (const category of intentInfo.categories.slice(0, 2)) {
+        try {
+          const result = await this.searchProducts({ category, limit: 2 });
+          for (const product of result.products) {
+            suggestions.push({
+              product,
+              reason: `Recommended for ${intent.replace('_', ' ')}`,
+              confidence: 0.7,
+              type: 'intent'
+            });
+          }
+        } catch (error) {
+          console.warn(`Failed to get products for intent: ${intent}`, error);
+        }
       }
     }
 
@@ -168,25 +325,25 @@ export class ProductService {
   }
 
   private async getProductsByStage(stage: string): Promise<ProductSuggestion[]> {
-    const stageProductMap: Record<string, { categories: string[], reason: string }> = {
+    const stageProductMap: Record<string, { searchTerms: string[], reason: string }> = {
       'introduction': {
-        categories: ['beauty', 'fragrances'],
+        searchTerms: ['phone', 'smartphone'],
         reason: 'Perfect for getting started'
       },
       'discovery': {
-        categories: ['smartphones', 'laptops'],
+        searchTerms: ['phone', 'smartphone'],
         reason: 'Popular choices for new customers'
       },
       'presentation': {
-        categories: ['laptops', 'tablets'],
+        searchTerms: ['phone', 'iphone'],
         reason: 'Featured products with great reviews'
       },
       'objection_handling': {
-        categories: ['smartphones', 'home-decoration'],
+        searchTerms: ['phone', 'budget'],
         reason: 'Great value for money'
       },
       'closing': {
-        categories: ['laptops', 'smartphones'],
+        searchTerms: ['phone', 'smartphone'],
         reason: 'Best sellers - limited time offer'
       }
     };
@@ -196,9 +353,9 @@ export class ProductService {
 
     const suggestions: ProductSuggestion[] = [];
     
-    for (const category of stageInfo.categories.slice(0, 2)) {
+    for (const searchTerm of stageInfo.searchTerms.slice(0, 2)) {
       try {
-        const result = await this.searchProducts({ category, limit: 2 });
+        const result = await this.searchProducts({ q: searchTerm, limit: 2 });
         for (const product of result.products) {
           suggestions.push({
             product,

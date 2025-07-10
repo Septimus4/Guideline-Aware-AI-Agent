@@ -40,7 +40,7 @@ export const ChatMessageSchema = z.object({
 
 export const ChatRequestSchema = z.object({
   message: z.string().min(1, 'Message is required'),
-  conversation_id: z.string().optional(),
+  conversation_id: z.string().nullable().optional(),
   context: z.object({
     user_intent: z.string().optional(),
     conversation_stage: z.string().optional(),

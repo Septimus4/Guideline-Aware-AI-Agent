@@ -77,10 +77,20 @@ export class AgentService {
       const enhancedContext = {
         ...fullContext,
         suggested_products: smartSuggestions?.slice(0, 3).map(s => ({
+          id: s.product.id,
           name: s.product.title,
-          price: s.product.price,
-          reason: s.reason
-        }))
+          price: `$${s.product.price}`,
+          description: s.product.description,
+          rating: s.product.rating,
+          category: s.product.category,
+          brand: s.product.brand,
+          stock: s.product.stock,
+          reason: s.reason,
+          confidence: s.confidence
+        })),
+        available_product_info: smartSuggestions?.length > 0 ? 
+          'Use the suggested_products data above to provide accurate product information, specifications, and pricing.' :
+          'No specific product matches found for this query.'
       };
       
       // Generate AI response with product awareness

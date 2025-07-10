@@ -101,10 +101,18 @@ describe('AgentService', () => {
           conversation_stage: 'introduction',
           keywords: ['help'],
           suggested_products: [{
+            id: 1,
             name: 'Test Product',
-            price: 19.99,
-            reason: 'Test reason'
-          }]
+            price: '$19.99',
+            description: undefined,
+            rating: undefined,
+            category: 'test',
+            brand: undefined,
+            stock: undefined,
+            reason: 'Test reason',
+            confidence: 0.8
+          }],
+          available_product_info: 'Use the suggested_products data above to provide accurate product information, specifications, and pricing.'
         },
         smartSuggestions: mockSmartSuggestions
       });
