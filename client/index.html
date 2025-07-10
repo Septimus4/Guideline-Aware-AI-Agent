@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guideline-Aware AI Agent</title>
+    <title>AI Shopping Assistant - Your Personal Shopping Helper</title>
+    <!-- Marked.js for markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- DOMPurify for HTML sanitization -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -50,6 +54,29 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border-radius: 12px 12px 0 0;
+            position: relative;
+        }
+
+        .chat-header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .chat-header p {
+            margin: 4px 0 0 0;
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .shopping-status {
+            position: absolute;
+            top: 20px;
+            right: 24px;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
         }
 
         .chat-messages {
@@ -88,6 +115,113 @@
         .message.assistant .message-content {
             background: #f1f3f5;
             color: #333;
+        }
+
+        /* Markdown rendering styles */
+        .message-content h1, 
+        .message-content h2, 
+        .message-content h3, 
+        .message-content h4, 
+        .message-content h5, 
+        .message-content h6 {
+            margin: 8px 0 4px 0;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .message-content h1 { font-size: 1.3rem; }
+        .message-content h2 { font-size: 1.2rem; }
+        .message-content h3 { font-size: 1.1rem; }
+        .message-content h4 { font-size: 1rem; }
+        .message-content h5 { font-size: 0.95rem; }
+        .message-content h6 { font-size: 0.9rem; }
+
+        .message-content p {
+            margin: 6px 0;
+            line-height: 1.5;
+        }
+
+        .message-content ul, 
+        .message-content ol {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .message-content li {
+            margin: 2px 0;
+            line-height: 1.4;
+        }
+
+        .message-content code {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Courier New', Consolas, monospace;
+            font-size: 0.9em;
+        }
+
+        .message-content pre {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 8px 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 8px 0;
+            border-left: 3px solid #007bff;
+        }
+
+        .message-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .message-content blockquote {
+            border-left: 3px solid #007bff;
+            padding-left: 12px;
+            margin: 8px 0;
+            font-style: italic;
+            color: #666;
+        }
+
+        .message-content strong {
+            font-weight: 600;
+        }
+
+        .message-content em {
+            font-style: italic;
+        }
+
+        .message-content a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .message-content a:hover {
+            text-decoration: underline;
+        }
+
+        .message-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 8px 0;
+            font-size: 0.9rem;
+        }
+
+        .message-content th,
+        .message-content td {
+            border: 1px solid #ddd;
+            padding: 6px 8px;
+            text-align: left;
+        }
+
+        .message-content th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .message-content hr {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin: 12px 0;
         }
 
         .message-time {
@@ -266,6 +400,218 @@
             border-left: 4px solid #c62828;
         }
 
+        /* Shopping-specific styles */
+        .shopping-tools {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .shopping-tool {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .shopping-tool:hover {
+            transform: translateY(-2px);
+        }
+
+        .product-categories {
+            margin-bottom: 20px;
+        }
+
+        .category-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .category-tag {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .category-tag:hover {
+            background: #1976d2;
+            color: white;
+        }
+
+        .price-range {
+            margin-bottom: 20px;
+        }
+
+        .price-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .price-inputs input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .shopping-cart-summary {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .product-image {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 12px;
+        }
+
+        .product-details {
+            flex: 1;
+        }
+
+        .product-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+        }
+
+        .product-price-discount {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .original-price {
+            text-decoration: line-through;
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        .discount-badge {
+            background: #dc3545;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+        }
+
+        .stock-alert {
+            background: #fff3cd;
+            color: #856404;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+
+        .purchase-readiness {
+            background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .readiness-score {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .shopping-insights {
+            background: #e3f2fd;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .insight-section {
+            margin-bottom: 12px;
+        }
+
+        .insight-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .insight-title {
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        .insight-item {
+            background: rgba(255,255,255,0.8);
+            padding: 6px 10px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            font-size: 0.8rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
         @media (max-width: 768px) {
             .container {
                 grid-template-columns: 1fr;
@@ -277,6 +623,58 @@
 <body>
     <div class="container">
         <div class="sidebar">
+            <!-- Shopping Tools -->
+            <div class="shopping-tools">
+                <div class="shopping-tool" onclick="openCartModal()">
+                    🛒 Shopping Cart
+                    <div id="cartCount" style="font-size: 0.8rem;">0 items</div>
+                </div>
+                <div class="shopping-tool" onclick="openWishlistModal()">
+                    ❤️ Wishlist
+                    <div id="wishlistCount" style="font-size: 0.8rem;">0 items</div>
+                </div>
+            </div>
+
+            <!-- Product Categories -->
+            <div class="product-categories">
+                <h3>🏪 Shop by Category</h3>
+                <div class="category-tags">
+                    <div class="category-tag" onclick="searchCategory('electronics')">Electronics</div>
+                    <div class="category-tag" onclick="searchCategory('fashion')">Fashion</div>
+                    <div class="category-tag" onclick="searchCategory('beauty')">Beauty</div>
+                    <div class="category-tag" onclick="searchCategory('home')">Home</div>
+                    <div class="category-tag" onclick="searchCategory('sports')">Sports</div>
+                    <div class="category-tag" onclick="searchCategory('books')">Books</div>
+                </div>
+            </div>
+
+            <!-- Price Range Filter -->
+            <div class="price-range">
+                <h3>💰 Budget Range</h3>
+                <div class="price-inputs">
+                    <input type="number" id="minPrice" placeholder="Min $" min="0">
+                    <input type="number" id="maxPrice" placeholder="Max $" min="0">
+                </div>
+            </div>
+
+            <!-- Purchase Readiness Score -->
+            <div class="purchase-readiness" id="purchaseReadiness" style="display: none;">
+                <div class="readiness-score" id="readinessScore">0%</div>
+                <div>Purchase Readiness</div>
+            </div>
+
+            <!-- Shopping Insights -->
+            <div class="shopping-insights" id="shoppingInsights" style="display: none;">
+                <div class="insight-section">
+                    <div class="insight-title">💡 Recommendations</div>
+                    <div id="recommendedActions"></div>
+                </div>
+                <div class="insight-section">
+                    <div class="insight-title">🚨 Alerts</div>
+                    <div id="alertsContainer"></div>
+                </div>
+            </div>
+            
             <div class="guidelines-section">
                 <h3>📋 Active Guidelines</h3>
                 <div id="guidelinesContainer">
@@ -297,33 +695,89 @@
 
         <div class="chat-container">
             <div class="chat-header">
-                <h2>💬 Guideline-Aware AI Agent</h2>
-                <p>Sales assistant powered by dynamic behavioral guidelines</p>
+                <h1>�️ AI Shopping Assistant</h1>
+                <p>Your personal shopping helper - Browse, Compare, and Buy with confidence</p>
             </div>
             
             <div class="chat-messages" id="chatMessages">
-                <div class="message assistant">
-                    <div class="message-content">
-                        Hello! I'm your sales assistant. I'm here to help you with any questions about our products and services. How can I assist you today?
-                    </div>
-                    <div class="message-time">Just now</div>
-                </div>
+                <!-- Initial message will be added via JavaScript with markdown parsing -->
             </div>
             
             <div class="chat-input">
-                <input type="text" id="messageInput" placeholder="Type your message..." maxlength="500">
+                <input type="text" id="messageInput" placeholder="What are you shopping for today? (e.g., 'smartphone under $500', 'laptop for work', 'skincare routine')" maxlength="500">
                 <button id="sendButton" onclick="sendMessage()">Send</button>
             </div>
         </div>
     </div>
 
+    <!-- Shopping Cart Modal -->
+    <div id="cartModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCartModal()">&times;</span>
+            <h2>🛒 Shopping Cart</h2>
+            <div id="cartItems">
+                <p>Your cart is empty. Start shopping to add items!</p>
+            </div>
+            <div id="cartTotal" style="text-align: right; margin-top: 20px; font-weight: bold;">
+                Total: $0.00
+            </div>
+        </div>
+    </div>
+
+    <!-- Wishlist Modal -->
+    <div id="wishlistModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeWishlistModal()">&times;</span>
+            <h2>❤️ Wishlist</h2>
+            <div id="wishlistItems">
+                <p>Your wishlist is empty. Add products you love!</p>
+            </div>
+        </div>
+    </div>
+
     <script>
-        const API_BASE = 'https://ubiquitous-waffle-jqrw7v5p9j7c7gx-3001.app.github.dev/api';
+        // API Configuration - automatically detect environment
+        const API_BASE = (() => {
+            if (window.location.hostname === 'localhost') {
+                return 'http://localhost:3001/api';
+            } else if (window.location.hostname.includes('github.dev')) {
+                // GitHub Codespaces environment - construct the API URL correctly
+                const currentHostname = window.location.hostname;
+                const baseName = currentHostname.replace(/-3000\.app\.github\.dev$/, '');
+                return `https://${baseName}-3001.app.github.dev/api`;
+            } else {
+                // Fallback for other environments
+                return 'https://ubiquitous-waffle-jqrw7v5p9j7c7gx-3001.app.github.dev/api';
+            }
+        })();
+        
+        console.log('API Base URL:', API_BASE);
         let currentConversationId = null;
         let isLoading = false;
 
+        // Shopping functionality
+        let shoppingCart = [];
+        let wishlist = [];
+        
         // Load guidelines on page load
         document.addEventListener('DOMContentLoaded', () => {
+            // Add welcome message with markdown formatting
+            const welcomeMessage = `**Welcome to your AI Shopping Assistant!** 🛍️ 
+
+I'm here to help you discover amazing products, compare options, and make confident purchasing decisions. 
+
+**What I can help you with:**
+- 🔍 Find products in any category
+- 💰 Compare prices and features
+- ⭐ Get personalized recommendations
+- 📋 Track your wishlist and cart
+
+Whether you're looking for **electronics**, **fashion**, **beauty products**, or anything else, I'll guide you every step of the way. 
+
+*What can I help you find today?*`;
+            
+            addMessage(welcomeMessage, 'assistant');
+            
             loadGuidelines();
             
             // Handle Enter key in input
@@ -337,10 +791,17 @@
         async function loadGuidelines() {
             try {
                 console.log('Loading guidelines from:', `${API_BASE}/guidelines?isActive=true`);
-                const response = await fetch(`${API_BASE}/guidelines?isActive=true`);
+                const response = await fetch(`${API_BASE}/guidelines?isActive=true`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    mode: 'cors'
+                });
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
                 }
                 
                 const guidelines = await response.json();
@@ -417,6 +878,7 @@
                 // Update context info and smart suggestions
                 updateContextInfo(result.context, result.appliedGuidelines);
                 updateSmartSuggestions(result.smartSuggestions);
+                updateShoppingInsights(result.shoppingInsights, result.context);
                 
             } catch (error) {
                 console.error('Error sending message:', error);
@@ -435,8 +897,25 @@
             const now = new Date();
             const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             
+            // Process content based on role
+            let processedContent;
+            if (role === 'assistant') {
+                // Parse markdown for assistant messages
+                try {
+                    const markdownHTML = marked.parse(content);
+                    // Sanitize HTML to prevent XSS attacks
+                    processedContent = DOMPurify.sanitize(markdownHTML);
+                } catch (error) {
+                    console.warn('Markdown parsing failed, falling back to plain text:', error);
+                    processedContent = DOMPurify.sanitize(content.replace(/\n/g, '<br>'));
+                }
+            } else {
+                // Keep user messages as plain text but handle line breaks and sanitize
+                processedContent = DOMPurify.sanitize(content.replace(/\n/g, '<br>'));
+            }
+            
             messageDiv.innerHTML = `
-                <div class="message-content">${content}</div>
+                <div class="message-content">${processedContent}</div>
                 <div class="message-time">${timeString}</div>
             `;
             
@@ -484,14 +963,37 @@
             let html = '';
             suggestions.forEach(suggestion => {
                 const confidencePercent = Math.round(suggestion.confidence * 100);
+                const discountHTML = suggestion.product.discountPercentage > 0 ? 
+                    `<span class="discount-badge">${suggestion.product.discountPercentage}% off</span>` : '';
+                const stockAlert = suggestion.product.stock < 10 ? 
+                    `<div class="stock-alert">⚠️ Only ${suggestion.product.stock} left!</div>` : '';
+                
                 html += `
-                    <div class="product-suggestion" onclick="viewProduct(${suggestion.product.id})">
+                    <div class="product-suggestion">
                         <div class="product-title">
                             ${suggestion.product.title}
                             <span class="product-confidence">${confidencePercent}% match</span>
                         </div>
-                        <div class="product-price">$${suggestion.product.price}</div>
+                        <div class="product-price-discount">
+                            <span class="product-price">$${suggestion.product.price}</span>
+                            ${discountHTML}
+                        </div>
                         <div class="product-reason">${suggestion.reason}</div>
+                        ${stockAlert}
+                        <div style="margin-top: 8px; display: flex; gap: 8px;">
+                            <button onclick="addToCart({id: ${suggestion.product.id}, name: '${suggestion.product.title}', price: ${suggestion.product.price}, thumbnail: '${suggestion.product.thumbnail}'})" 
+                                    style="background: #007bff; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">
+                                🛒 Add to Cart
+                            </button>
+                            <button onclick="addToWishlist({id: ${suggestion.product.id}, name: '${suggestion.product.title}', price: ${suggestion.product.price}, thumbnail: '${suggestion.product.thumbnail}'})" 
+                                    style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">
+                                ❤️ Wishlist
+                            </button>
+                            <button onclick="viewProduct(${suggestion.product.id})" 
+                                    style="background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">
+                                👁️ View Details
+                            </button>
+                        </div>
                     </div>
                 `;
             });
@@ -526,7 +1028,195 @@
             alert(modalContent);
         }
 
-        // ...existing code...
+        function openCartModal() {
+            document.getElementById('cartModal').style.display = 'block';
+            displayCartItems();
+        }
+
+        function closeCartModal() {
+            document.getElementById('cartModal').style.display = 'none';
+        }
+
+        function openWishlistModal() {
+            document.getElementById('wishlistModal').style.display = 'block';
+            displayWishlistItems();
+        }
+
+        function closeWishlistModal() {
+            document.getElementById('wishlistModal').style.display = 'none';
+        }
+
+        function addToCart(product) {
+            const existingItem = shoppingCart.find(item => item.id === product.id);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                shoppingCart.push({...product, quantity: 1});
+            }
+            updateCartCount();
+            updateShoppingStatus();
+        }
+        
+        function addToWishlist(product) {
+            if (!wishlist.find(item => item.id === product.id)) {
+                wishlist.push(product);
+                updateWishlistCount();
+            }
+        }
+        
+        function removeFromCart(productId) {
+            shoppingCart = shoppingCart.filter(item => item.id !== productId);
+            updateCartCount();
+            displayCartItems();
+            updateShoppingStatus();
+        }
+        
+        function removeFromWishlist(productId) {
+            wishlist = wishlist.filter(item => item.id !== productId);
+            updateWishlistCount();
+            displayWishlistItems();
+        }
+        
+        function updateCartCount() {
+            const count = shoppingCart.reduce((sum, item) => sum + item.quantity, 0);
+            document.getElementById('cartCount').textContent = `${count} items`;
+        }
+        
+        function updateWishlistCount() {
+            document.getElementById('wishlistCount').textContent = `${wishlist.length} items`;
+        }
+        
+        function updateShoppingStatus() {
+            const status = document.getElementById('shoppingStatus');
+            const cartTotal = calculateCartTotal();
+            if (cartTotal > 0) {
+                status.textContent = `Cart: $${cartTotal.toFixed(2)}`;
+            } else {
+                status.textContent = 'Ready to Shop';
+            }
+        }
+        
+        function calculateCartTotal() {
+            return shoppingCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        }
+        
+        function displayCartItems() {
+            const container = document.getElementById('cartItems');
+            const totalElement = document.getElementById('cartTotal');
+            
+            if (shoppingCart.length === 0) {
+                container.innerHTML = '<p>Your cart is empty. Start shopping to add items!</p>';
+                totalElement.innerHTML = 'Total: $0.00';
+                return;
+            }
+            
+            container.innerHTML = shoppingCart.map(item => `
+                <div class="cart-item">
+                    <img src="${item.thumbnail || ''}" alt="${item.name}" class="product-image">
+                    <div class="product-details">
+                        <div class="product-name">${item.name}</div>
+                        <div class="product-price-discount">
+                            <span class="product-price">$${item.price}</span>
+                            <span>Qty: ${item.quantity}</span>
+                        </div>
+                    </div>
+                    <button onclick="removeFromCart(${item.id})" style="background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Remove</button>
+                </div>
+            `).join('');
+            
+            totalElement.innerHTML = `Total: $${calculateCartTotal().toFixed(2)}`;
+        }
+        
+        function displayWishlistItems() {
+            const container = document.getElementById('wishlistItems');
+            
+            if (wishlist.length === 0) {
+                container.innerHTML = '<p>Your wishlist is empty. Add products you love!</p>';
+                return;
+            }
+            
+            container.innerHTML = wishlist.map(item => `
+                <div class="cart-item">
+                    <img src="${item.thumbnail || ''}" alt="${item.name}" class="product-image">
+                    <div class="product-details">
+                        <div class="product-name">${item.name}</div>
+                        <div class="product-price">$${item.price}</div>
+                    </div>
+                    <button onclick="removeFromWishlist(${item.id})" style="background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Remove</button>
+                </div>
+            `).join('');
+        }
+        
+        function searchCategory(category) {
+            const input = document.getElementById('messageInput');
+            input.value = `Show me ${category} products`;
+            sendMessage();
+        }
+        
+        function updateShoppingInsights(insights, context) {
+            const shoppingInsights = document.getElementById('shoppingInsights');
+            const purchaseReadiness = document.getElementById('purchaseReadiness');
+            const readinessScore = document.getElementById('readinessScore');
+            const recommendedActions = document.getElementById('recommendedActions');
+            const alertsContainer = document.getElementById('alertsContainer');
+            
+            if (!insights && !context.purchase_readiness) {
+                shoppingInsights.style.display = 'none';
+                purchaseReadiness.style.display = 'none';
+                return;
+            }
+            
+            // Update purchase readiness
+            if (context.purchase_readiness) {
+                readinessScore.textContent = `${context.purchase_readiness}%`;
+                purchaseReadiness.style.display = 'block';
+            } else {
+                purchaseReadiness.style.display = 'none';
+            }
+            
+            // Update shopping insights
+            if (insights) {
+                let actionsHTML = '';
+                let alertsHTML = '';
+                
+                if (insights.recommendedActions && insights.recommendedActions.length > 0) {
+                    actionsHTML = insights.recommendedActions.map(action => 
+                        `<div class="insight-item">💡 ${action}</div>`
+                    ).join('');
+                }
+                
+                if (insights.priceAlerts && insights.priceAlerts.length > 0) {
+                    alertsHTML += insights.priceAlerts.map(alert => 
+                        `<div class="insight-item">💰 ${alert}</div>`
+                    ).join('');
+                }
+                
+                if (insights.stockAlerts && insights.stockAlerts.length > 0) {
+                    alertsHTML += insights.stockAlerts.map(alert => 
+                        `<div class="insight-item">⚠️ ${alert}</div>`
+                    ).join('');
+                }
+                
+                recommendedActions.innerHTML = actionsHTML || '<div class="insight-item">No specific recommendations at this time</div>';
+                alertsContainer.innerHTML = alertsHTML || '<div class="insight-item">No alerts</div>';
+                shoppingInsights.style.display = 'block';
+            } else {
+                shoppingInsights.style.display = 'none';
+            }
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const cartModal = document.getElementById('cartModal');
+            const wishlistModal = document.getElementById('wishlistModal');
+            
+            if (event.target === cartModal) {
+                cartModal.style.display = 'none';
+            }
+            if (event.target === wishlistModal) {
+                wishlistModal.style.display = 'none';
+            }
+        }
     </script>
 </body>
 </html>

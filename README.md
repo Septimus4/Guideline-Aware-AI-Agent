@@ -1,52 +1,78 @@
-# Guideline-Aware AI Agent
+# AI Shopping Assistant Platform
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Septimus4/Guideline-Aware-AI-Agent)
 
-A TypeScript-based AI agent that dynamically incorporates behavioral guidelines into its responses based on context and conversation state. The agent pulls guidelines from a Supabase database and constructs personalized system prompts to provide contextually appropriate sales interactions.
+A sophisticated TypeScript-based AI shopping assistant that helps customers browse, choose, and purchase products online. The platform combines intelligent product recommendations with guideline-driven conversations to create personalized shopping experiences that drive customer satisfaction and sales conversions.
 
 📚 **Documentation is hosted on [DeepWiki](https://deepwiki.com/Septimus4/Guideline-Aware-AI-Agent)**
 
-## ✨ NEW FEATURES
+## 🛍️ SHOPPING FEATURES
 
-### 🛍️ DummyJSON Products Integration
+### 🎯 Smart Shopping Assistant
+* **Personalized Product Recommendations**: AI suggests products based on customer needs, preferences, budget, and conversation context
+* **Intelligent Conversation Flow**: Guides customers from discovery to purchase with contextual assistance
+* **Shopping Stage Awareness**: Adapts responses based on where customers are in their buying journey (browsing, comparing, deciding, purchasing)
+* **Purchase Readiness Detection**: Analyzes customer engagement to determine how close they are to buying
 
-* **Live Product Data**: Integrated with DummyJSON API for real product information
-* **Product Search**: Search across 100+ products in multiple categories
-* **Categories**: Beauty, Electronics, Fashion, Home, and more
+### 🛒 Product Integration
+* **Live Product Catalog**: Integrated with DummyJSON API for real product information (100+ products)
+* **Product Search & Discovery**: Advanced search across multiple categories with smart filtering
+* **Categories**: Beauty, Electronics, Fashion, Home, Automotive, Sports, Books, and more
+* **Detailed Product Information**: Specifications, reviews, pricing, discounts, availability, and shipping info
+* **Stock Management**: Real-time inventory tracking with low-stock alerts
 
-### 🎯 Smart Suggestions
+### 🧠 Context-Aware Assistance
+* **Shopping Intent Detection**: Recognizes when customers are browsing, comparing, or ready to buy
+* **Budget-Conscious Recommendations**: Suggests products within customer's price range with alternatives
+* **Comparison Support**: Helps customers evaluate different options side-by-side with detailed analysis
+* **Cross-selling & Upselling**: Intelligent suggestions for complementary products and upgrades
 
-* **Context-Aware Recommendations**: AI suggests relevant products based on conversation
-* **Multi-Factor Analysis**: Considers user intent, keywords, conversation stage
-* **Confidence Scoring**: Each suggestion includes relevance confidence (0-100%)
-* **Interactive Product Cards**: Click to view detailed product information
+### 💰 Shopping Intelligence
+* **Price Alerts**: Notifications for price drops and special offers
+* **Deal Highlighting**: Automatic detection and promotion of discounts and sales
+* **Budget Analysis**: Tracks spending against customer budget preferences
+* **Purchase Insights**: Analytics on customer behavior and shopping patterns
 
 ## 🎯 What It Does
 
-This MVP demonstrates a sales-focused AI agent that:
+This AI Shopping Assistant provides:
 
-* **Dynamically applies behavioral guidelines** from a database based on conversation context
-* **Adapts responses** according to user intent, conversation stage, and detected keywords
-* **Suggests relevant products** using smart recommendation engine
-* **Provides real-time product information** from DummyJSON API
-* **Manages conversation state** and applies guidelines with priority-based selection
-* **Provides a real-time chat interface** with visibility into applied guidelines, context, and product suggestions
+* **🛍️ End-to-End Shopping Experience**: From product discovery to post-purchase support
+* **📱 Multi-Category Expertise**: Deep knowledge about electronics, fashion, beauty, home goods, and more
+* **💡 Smart Product Discovery**: Helps customers find products they didn't know they needed
+* **💰 Budget-Friendly Options**: Suggests products within customer price ranges and highlights deals
+* **🔄 Comparison Support**: Enables side-by-side product comparisons with detailed feature analysis
+* **🛒 Purchase Guidance**: Walks customers through the entire buying process from discovery to checkout
+* **📞 Post-Purchase Support**: Continues relationship with order tracking and customer care
+* **🎁 Gift Recommendations**: Seasonal and occasion-based product suggestions
 
 ## 🏗️ Technical Architecture
 
-### Core Components
+### Core Shopping Components
 
-1. **Guideline Management System**
+1. **Shopping Guidelines System**
+   * 15+ specialized guidelines for different product categories and shopping stages
+   * Context-aware guideline selection based on customer intent and conversation flow
+   * Dynamic conversation adaptation for browsing, comparison, and purchase phases
+   * Priority-based guideline application with shopping-specific rules
 
-   * Database storage for behavioral guidelines with conditions and priorities
-   * Context-aware guideline selection based on user intent, conversation stage, and keywords
-   * Dynamic prompt construction using applicable guidelines
+2. **Product Intelligence Service**
+   * Real-time product data from DummyJSON API
+   * Smart product matching based on customer needs and preferences
+   * Advanced filtering by price, category, brand, and features
+   * Inventory tracking and availability management
 
-2. **AI Agent Service**
+3. **Shopping Context Engine**
+   * Purchase readiness scoring based on customer engagement
+   * Shopping intent classification (browsing, comparing, buying, support)
+   * Budget analysis and price range optimization
+   * Cross-selling and upselling opportunity identification
+   * Inventory awareness and availability checking
 
-   * OpenAI GPT-4 integration with dynamic system prompts
-   * Conversation state management and context extraction
-   * Priority-based guideline application
+3. **AI Shopping Agent**
+   * OpenAI GPT-4 integration optimized for shopping conversations
+   * Shopping stage detection and conversation state management
+   * Purchase intent recognition and conversion optimization
 
 3. **REST API Server**
 

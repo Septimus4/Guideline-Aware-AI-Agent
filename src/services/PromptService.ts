@@ -16,26 +16,48 @@ export class PromptService {
   constructSystemPrompt(guidelines: Guideline[], context?: {
     user_intent?: string;
     conversation_stage?: string;
+    shopping_intent?: string;
     applied_guidelines?: string[];
+    purchase_readiness?: number;
   }): string {
-    const basePrompt = `You are a sales-focused AI agent designed to help close deals. Your primary objective is to engage prospects, understand their needs, handle objections, and guide them toward making a purchase decision.
+    const basePrompt = `You are an expert AI Shopping Assistant designed to help customers browse, compare, and purchase products. Your primary goal is to provide exceptional shopping experiences that lead to satisfied customers and successful purchases.
 
 CORE BEHAVIOR:
-- Be professional but conversational
-- Ask clarifying questions to understand the prospect's needs
-- Address objections with empathy and evidence
-- Always look for opportunities to advance the conversation toward a close
-- Provide value in every interaction
-- When appropriate, mention specific products that match the customer's needs
+- Be enthusiastic and helpful about shopping
+- Ask clarifying questions to understand customer needs, budget, and preferences
+- Provide detailed product information including specifications, reviews, and comparisons
+- Address concerns about price, quality, shipping, and returns with confidence
+- Guide customers through the entire shopping journey from discovery to purchase
+- Offer personalized recommendations based on their specific requirements
+- Create urgency appropriately (limited stock, deals ending soon) but never pressure
+
+SHOPPING ASSISTANCE FOCUS:
+- Help customers discover products that match their needs and budget
+- Provide detailed comparisons between similar products
+- Explain value propositions and highlight key benefits
+- Address common shopping concerns (shipping, returns, warranty)
+- Suggest complementary products and accessories
+- Guide customers to make confident purchase decisions
+- Provide post-purchase support and follow-up
 
 PRODUCT RECOMMENDATIONS:
-- Use the suggested_products in context to make relevant recommendations
-- Always explain WHY a product is suitable for the customer based on the actual product data
-- Mention specific details like exact price, features, ratings, and availability when available
-- Be natural - don't force product recommendations if they don't fit the conversation
-- Focus on solving the customer's problem first, then suggest products
-- When comparing products, use actual specifications and prices from the product data
-- If the customer asks about specific products (like iPhone models), prioritize showing actual available products over generic information`;
+- Use the suggested_products in context to make highly relevant recommendations
+- Always explain WHY a product is perfect for the customer based on actual product data
+- Mention specific details like exact price, original price, discounts, ratings, stock levels, and availability
+- Include shipping information, warranty details, and return policies when available
+- Be natural - recommendations should feel helpful, not pushy
+- Focus on solving the customer's problem first, then suggest the best products
+- When comparing products, use actual specifications, prices, and customer reviews from the product data
+- If customer asks about specific products, prioritize showing actual available products with real data
+- Highlight special offers, discounts, and deals when available
+- Alert customers to low stock situations appropriately
+
+SHOPPING INSIGHTS:
+- Use purchase_readiness score to adapt your approach (higher score = more direct sales focus)
+- Incorporate shopping insights like price alerts, stock alerts, and recommendations
+- Reference similar customer behaviors and popular choices when relevant
+- Suggest budget-friendly alternatives when appropriate
+- Highlight value for money and long-term benefits`;
 
     const contextText = context ? `
 
@@ -103,13 +125,19 @@ Remember: These guidelines are critical for successful sales interactions. Follo
   extractContextFromMessage(message: string): {
     userIntent?: string;
     keywords: string[];
+    shoppingIntent?: string;
+    budgetRange?: string;
   } {
     const keywords = this.extractKeywords(message);
     const userIntent = this.classifyIntent(message);
+    const shoppingIntent = this.classifyShoppingIntent(message);
+    const budgetRange = this.extractBudgetRange(message);
 
     return {
       userIntent,
-      keywords
+      keywords,
+      shoppingIntent,
+      budgetRange
     };
   }
 
@@ -117,64 +145,118 @@ Remember: These guidelines are critical for successful sales interactions. Follo
     const lowerMessage = message.toLowerCase();
     const words = lowerMessage.split(/\s+/);
     
-    // Enhanced keyword extraction with better categorization
-    const salesKeywords = [
-      'price', 'cost', 'budget', 'expensive', 'cheap', 'affordable',
-      'feature', 'benefit', 'advantage', 'comparison', 'competitor',
-      'demo', 'trial', 'test', 'evaluation', 'review',
-      'contract', 'agreement', 'terms', 'payment', 'billing',
-      'support', 'service', 'help', 'assistance', 'training',
-      'integration', 'setup', 'implementation', 'customization',
-      'security', 'compliance', 'privacy', 'data protection',
-      'scale', 'growth', 'enterprise', 'team', 'users'
+    // Enhanced keyword extraction with better shopping categorization
+    const shoppingKeywords = [
+      // Price and budget keywords
+      'price', 'cost', 'budget', 'expensive', 'cheap', 'affordable', 'deal', 'discount', 'sale', 'offer',
+      'under', 'below', 'maximum', 'minimum', 'range', 'around', 'approximately', 'about',
+      
+      // Product features
+      'feature', 'specification', 'specs', 'quality', 'rating', 'review', 'brand', 'model',
+      'size', 'color', 'capacity', 'storage', 'memory', 'battery', 'camera', 'screen',
+      
+      // Shopping actions
+      'buy', 'purchase', 'order', 'checkout', 'cart', 'wishlist', 'compare', 'vs', 'versus',
+      'difference', 'similar', 'alternative', 'option', 'choice', 'recommendation',
+      
+      // Product categories
+      'phone', 'smartphone', 'mobile', 'laptop', 'computer', 'tablet', 'headphones', 'camera',
+      'tv', 'television', 'gaming', 'console', 'electronics', 'tech', 'gadget',
+      'clothing', 'fashion', 'shirt', 'dress', 'shoes', 'jeans', 'jacket', 'bag', 'watch',
+      'beauty', 'skincare', 'makeup', 'fragrance', 'cosmetics', 'perfume',
+      'home', 'furniture', 'kitchen', 'bedroom', 'decor', 'appliance',
+      'book', 'novel', 'textbook', 'magazine', 'reading',
+      'health', 'fitness', 'sports', 'exercise', 'gym', 'outdoor',
+      'food', 'grocery', 'snack', 'organic', 'beverage',
+      
+      // Shopping concerns
+      'shipping', 'delivery', 'return', 'warranty', 'guarantee', 'support', 'service',
+      'availability', 'stock', 'inventory', 'sold', 'out', 'available',
+      'trustworthy', 'reliable', 'authentic', 'genuine', 'fake', 'counterfeit',
+      
+      // Intent keywords
+      'help', 'assist', 'find', 'search', 'looking', 'need', 'want', 'interested',
+      'recommendation', 'suggest', 'advise', 'guide', 'best', 'top', 'popular'
     ];
 
-    // Product-specific keywords with better phone detection
-    const productKeywords = [
-      // Phone keywords
-      'phone', 'smartphone', 'iphone', 'android', 'mobile', 'cell', 'cellular',
-      'galaxy', 'pixel', 'oneplus', 'huawei', 'xiaomi', 'nokia', 'motorola',
-      // Computer keywords  
-      'laptop', 'computer', 'tablet', 'ipad', 'macbook', 'pc', 'desktop',
-      // Electronics
-      'camera', 'headphones', 'speaker', 'watch', 'smartwatch',
-      // Other categories
-      'beauty', 'skincare', 'makeup', 'fragrance', 'perfume',
-      'home', 'decoration', 'furniture', 'kitchen', 'bedroom',
-      'clothing', 'fashion', 'shirt', 'dress', 'shoes', 'accessories',
-      'grocery', 'food', 'snacks', 'beverages', 'cooking',
-      'health', 'wellness', 'vitamins', 'supplements', 'fitness'
-    ];
+    return words.filter(word => 
+      shoppingKeywords.includes(word) || 
+      /^\d+$/.test(word) || // Numbers (prices, quantities)
+      /\$\d+/.test(word) || // Dollar amounts
+      word.length > 3 // Longer words that might be product names
+    );
+  }
 
-    // Also check for specific model names and brand patterns
-    const phoneModels = [
-      'iphone 5', 'iphone 6', 'iphone 7', 'iphone 8', 'iphone x', 'iphone 11', 'iphone 12', 'iphone 13', 'iphone 14', 'iphone 15',
-      'galaxy s', 'pixel', 'oneplus', 'note'
-    ];
+  private classifyShoppingIntent(message: string): string {
+    const lowerMessage = message.toLowerCase();
 
-    const extractedKeywords = new Set<string>();
+    if (lowerMessage.includes('buy') || lowerMessage.includes('purchase') || 
+        lowerMessage.includes('order') || lowerMessage.includes('checkout')) {
+      return 'buying';
+    }
     
-    // Add matching individual words
-    words.forEach(word => {
-      if (salesKeywords.includes(word) || productKeywords.includes(word)) {
-        extractedKeywords.add(word);
-      }
-    });
+    if (lowerMessage.includes('compare') || lowerMessage.includes('vs') || 
+        lowerMessage.includes('versus') || lowerMessage.includes('difference')) {
+      return 'comparing';
+    }
+    
+    if (lowerMessage.includes('help') || lowerMessage.includes('support') || 
+        lowerMessage.includes('question') || lowerMessage.includes('return') ||
+        lowerMessage.includes('shipping') || lowerMessage.includes('warranty')) {
+      return 'support';
+    }
+    
+    return 'browsing';
+  }
 
-    // Add matching phone model patterns
-    phoneModels.forEach(model => {
-      if (lowerMessage.includes(model)) {
-        extractedKeywords.add(model.replace(/\s+/g, '_'));
-      }
-    });
+  private extractBudgetRange(message: string): string | undefined {
+    const lowerMessage = message.toLowerCase();
+    
+    // Look for explicit budget mentions
+    const budgetPatterns = [
+      /under\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)/i,
+      /below\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)/i,
+      /maximum\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)/i,
+      /budget\s*(?:of|is)?\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)/i,
+      /around\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)/i,
+      /about\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)/i,
+      /\$(\d+(?:,\d{3})*(?:\.\d{2})?)\s*(?:or\s*less|max|maximum)/i
+    ];
 
-    // Special handling for "lost" or "broken" phone scenarios
-    if (lowerMessage.includes('lost') || lowerMessage.includes('broken') || lowerMessage.includes('damaged')) {
-      extractedKeywords.add('replacement');
-      extractedKeywords.add('phone');
+    for (const pattern of budgetPatterns) {
+      const match = message.match(pattern);
+      if (match) {
+        const amount = parseFloat(match[1].replace(',', ''));
+        if (amount <= 100) return 'under-100';
+        if (amount <= 300) return '100-300';
+        if (amount <= 500) return '300-500';
+        if (amount <= 1000) return '500-1000';
+        if (amount <= 2000) return '1000-2000';
+        return 'over-2000';
+      }
     }
 
-    return Array.from(extractedKeywords);
+    // Look for range patterns
+    const rangePattern = /\$?(\d+(?:,\d{3})*(?:\.\d{2})?)\s*(?:to|-)\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)/i;
+    const rangeMatch = message.match(rangePattern);
+    if (rangeMatch) {
+      const min = parseFloat(rangeMatch[1].replace(',', ''));
+      const max = parseFloat(rangeMatch[2].replace(',', ''));
+      return `${min}-${max}`;
+    }
+
+    // Look for general budget indicators
+    if (lowerMessage.includes('cheap') || lowerMessage.includes('budget') || 
+        lowerMessage.includes('affordable')) {
+      return 'budget-friendly';
+    }
+    
+    if (lowerMessage.includes('premium') || lowerMessage.includes('high-end') || 
+        lowerMessage.includes('expensive') || lowerMessage.includes('luxury')) {
+      return 'premium';
+    }
+
+    return undefined;
   }
 
   private classifyIntent(message: string): string {
@@ -184,67 +266,55 @@ Remember: These guidelines are critical for successful sales interactions. Follo
       return 'unknown';
     }
 
-    // Greeting patterns
-    if (lowerMessage.includes('hello') || lowerMessage.includes('hi ') || lowerMessage.includes('hey ') || 
-        lowerMessage.match(/^(hello|hi|hey)$/)) {
-      return 'greeting';
+    // Shopping-specific intent patterns
+    if (lowerMessage.includes('buy') || lowerMessage.includes('purchase') || 
+        lowerMessage.includes('order') || lowerMessage.includes('get')) {
+      return 'purchase_intent';
     }
 
-    // Help patterns
-    if (lowerMessage.includes('help') || lowerMessage.includes('assistance') || lowerMessage.includes('support')) {
-      return 'help_request';
-    }
-
-    // Enhanced phone/product specific intent detection
-    if (lowerMessage.includes('phone') || lowerMessage.includes('iphone') || lowerMessage.includes('smartphone') || 
-        lowerMessage.includes('mobile') || lowerMessage.includes('android') || lowerMessage.includes('galaxy') ||
-        lowerMessage.includes('lost') && (lowerMessage.includes('phone') || lowerMessage.includes('mobile'))) {
-      
-      if (lowerMessage.includes('recommend') || lowerMessage.includes('suggest') || lowerMessage.includes('need')) {
-        return 'product_recommendation';
-      }
-      if (lowerMessage.includes('compare') || lowerMessage.includes('vs') || lowerMessage.includes('difference')) {
-        return 'product_comparison';
-      }
-      if (lowerMessage.includes('spec') || lowerMessage.includes('feature') || lowerMessage.includes('detail')) {
-        return 'product_inquiry';
-      }
-      return 'product_recommendation';
-    }
-
-    // Pricing patterns
-    if (lowerMessage.includes('price') || lowerMessage.includes('cost') || lowerMessage.includes('budget') ||
-        lowerMessage.includes('expensive') || lowerMessage.includes('cheap') || lowerMessage.includes('affordable')) {
-      return 'pricing_inquiry';
-    }
-
-    // Comparison patterns
-    if (lowerMessage.includes('compare') || lowerMessage.includes('alternative') || lowerMessage.includes('vs') ||
+    if (lowerMessage.includes('compare') || lowerMessage.includes('vs') || 
         lowerMessage.includes('difference') || lowerMessage.includes('better')) {
       return 'comparison_request';
     }
 
-    // Demo/trial patterns
-    if (lowerMessage.includes('demo') || lowerMessage.includes('trial') || lowerMessage.includes('test')) {
-      return 'demo_request';
+    if (lowerMessage.includes('recommend') || lowerMessage.includes('suggest') || 
+        lowerMessage.includes('best') || lowerMessage.includes('need')) {
+      return 'product_recommendation';
     }
 
-    // Feature inquiry patterns
-    if (lowerMessage.includes('feature') || lowerMessage.includes('how does') || lowerMessage.includes('what can') ||
-        lowerMessage.includes('spec') || lowerMessage.includes('specification')) {
+    if (lowerMessage.includes('price') || lowerMessage.includes('cost') || 
+        lowerMessage.includes('budget') || lowerMessage.includes('expensive')) {
+      return 'pricing_inquiry';
+    }
+
+    if (lowerMessage.includes('feature') || lowerMessage.includes('spec') || 
+        lowerMessage.includes('how does') || lowerMessage.includes('what can')) {
       return 'feature_inquiry';
     }
 
-    // Purchase intent patterns
-    if (lowerMessage.includes('buy') || lowerMessage.includes('purchase') || lowerMessage.includes('get started') ||
-        lowerMessage.includes('order') || lowerMessage.includes('want to get')) {
-      return 'purchase_intent';
+    if (lowerMessage.includes('review') || lowerMessage.includes('rating') || 
+        lowerMessage.includes('quality') || lowerMessage.includes('good')) {
+      return 'review_inquiry';
     }
 
-    // Problem/objection patterns
-    if (lowerMessage.includes('problem') || lowerMessage.includes('issue') || lowerMessage.includes('concern') ||
-        lowerMessage.includes('worry') || lowerMessage.includes('doubt')) {
-      return 'objection_handling';
+    if (lowerMessage.includes('available') || lowerMessage.includes('stock') || 
+        lowerMessage.includes('inventory') || lowerMessage.includes('in stock')) {
+      return 'availability_inquiry';
+    }
+
+    if (lowerMessage.includes('shipping') || lowerMessage.includes('delivery') || 
+        lowerMessage.includes('return') || lowerMessage.includes('warranty')) {
+      return 'service_inquiry';
+    }
+
+    if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || 
+        lowerMessage.match(/^(hello|hi|hey)$/)) {
+      return 'greeting';
+    }
+
+    if (lowerMessage.includes('help') || lowerMessage.includes('assistance') || 
+        lowerMessage.includes('support')) {
+      return 'help_request';
     }
 
     return 'general_inquiry';

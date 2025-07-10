@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import guidelineRoutes from '../routes/guidelines';
 import chatRoutes from '../routes/chat';
 import productRoutes from '../routes/products';
+import shoppingRoutes from '../routes/shopping';
 
 // Load environment variables
 dotenv.config();
@@ -12,7 +13,15 @@ const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: true, // Allow all origins in development
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
+  preflightContinue: false,
+  optionsSuccessStatus: 200
+}));
 app.use(express.json({ limit: '10mb' }));
 
 // JSON parsing error handler - must come after express.json()
@@ -28,10 +37,19 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Explicit OPTIONS handler for all API routes
+app.options('/api/*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  res.sendStatus(200);
+});
+
 // API routes
 app.use('/api/guidelines', guidelineRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/shopping', shoppingRoutes);
 
 // Root endpoint with API documentation
 app.get('/', (req, res) => {
@@ -57,6 +75,13 @@ app.get('/', (req, res) => {
         'GET /api/products/:id': 'Get product by ID',
         'GET /api/products/categories/list': 'Get all product categories',
         'GET /api/products/category/:category': 'Get products by category'
+      },
+      shopping: {
+        'GET /api/shopping/cart': 'Get shopping cart contents',
+        'POST /api/shopping/cart': 'Add item to shopping cart',
+        'PUT /api/shopping/cart/:itemId': 'Update shopping cart item quantity',
+        'DELETE /api/shopping/cart/:itemId': 'Remove item from shopping cart',
+        'POST /api/shopping/checkout': 'Checkout and create order'
       },
       utility: {
         'GET /health': 'Health check endpoint'
