@@ -1,0 +1,1541 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Guideline-Aware AI Agent API",
+    "description": "API for managing behavioral guidelines and AI agent interactions.\n\nThis API provides endpoints for:\n- Managing behavioral guidelines that drive AI agent responses\n- Processing chat conversations with guideline-aware responses\n- Product search and recommendation functionality\n- Conversation history management\n\nThe AI agent dynamically incorporates behavioral guidelines from Supabase to provide contextually appropriate responses.\n",
+    "version": "1.0.0",
+    "contact": {
+      "name": "API Support",
+      "email": "support@example.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001",
+      "description": "Development server"
+    },
+    {
+      "url": "https://api.example.com",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health check endpoint",
+        "description": "Returns the current health status of the API",
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-07-10T12:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "Documentation"
+        ],
+        "summary": "API documentation",
+        "description": "Returns basic API information and available endpoints",
+        "responses": {
+          "200": {
+            "description": "API documentation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "Guideline-Aware AI Agent API"
+                    },
+                    "version": {
+                      "type": "string",
+                      "example": "1.0.0"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "endpoints": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chat/message": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "summary": "Process chat message",
+        "description": "Process a user message and return an AI-generated response based on applicable guidelines.\nThe response includes the AI's reply, conversation context, applied guidelines, and product suggestions.\n",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              },
+              "examples": {
+                "greeting": {
+                  "summary": "Greeting message",
+                  "value": {
+                    "message": "Hello, I need help with finding a smartphone"
+                  }
+                },
+                "with_context": {
+                  "summary": "Message with context",
+                  "value": {
+                    "message": "What are the pricing options?",
+                    "conversation_id": "123e4567-e89b-12d3-a456-426614174000",
+                    "context": {
+                      "user_intent": "pricing_inquiry",
+                      "conversation_stage": "discovery",
+                      "keywords": [
+                        "pricing",
+                        "cost"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response with AI reply and context",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chat/conversation/{id}": {
+      "get": {
+        "tags": [
+          "Chat"
+        ],
+        "summary": "Get conversation history",
+        "description": "Retrieve the complete history of a conversation by its ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Conversation ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversation history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Conversation"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Conversation not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/guidelines": {
+      "get": {
+        "tags": [
+          "Guidelines"
+        ],
+        "summary": "Get all guidelines",
+        "description": "Retrieve all guidelines with optional filtering by category, active status, or tags",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filter by category",
+            "schema": {
+              "type": "string",
+              "example": "objection_handling"
+            }
+          },
+          {
+            "name": "isActive",
+            "in": "query",
+            "description": "Filter by active status",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "tags",
+            "in": "query",
+            "description": "Filter by tags (comma-separated)",
+            "schema": {
+              "type": "string",
+              "example": "pricing,objections"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of guidelines",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Guideline"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Guidelines"
+        ],
+        "summary": "Create new guideline",
+        "description": "Create a new behavioral guideline",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGuideline"
+              },
+              "example": {
+                "name": "Handle Pricing Objections",
+                "description": "Guidelines for responding to price-related concerns",
+                "content": "When a prospect mentions price concerns, acknowledge their budget constraints, then pivot to value proposition.",
+                "priority": 9,
+                "category": "objection_handling",
+                "tags": [
+                  "pricing",
+                  "objections",
+                  "value"
+                ],
+                "conditions": {
+                  "user_intent": [
+                    "pricing_inquiry",
+                    "objection_handling"
+                  ],
+                  "context_keywords": [
+                    "price",
+                    "cost",
+                    "expensive",
+                    "budget"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Guideline created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Guideline"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/guidelines/{id}": {
+      "get": {
+        "tags": [
+          "Guidelines"
+        ],
+        "summary": "Get guideline by ID",
+        "description": "Retrieve a specific guideline by its ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Guideline ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Guideline details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Guideline"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Guideline not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Guidelines"
+        ],
+        "summary": "Update guideline",
+        "description": "Update an existing guideline",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Guideline ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGuideline"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Guideline updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Guideline"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Guideline not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Guidelines"
+        ],
+        "summary": "Delete guideline",
+        "description": "Delete a guideline by its ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Guideline ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Guideline deleted successfully"
+          },
+          "404": {
+            "description": "Guideline not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/guidelines/applicable": {
+      "post": {
+        "tags": [
+          "Guidelines"
+        ],
+        "summary": "Get applicable guidelines",
+        "description": "Get guidelines that apply to the given context",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userIntent": {
+                    "type": "string",
+                    "example": "pricing_inquiry"
+                  },
+                  "conversationStage": {
+                    "type": "string",
+                    "example": "discovery"
+                  },
+                  "keywords": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "example": [
+                      "pricing",
+                      "cost"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List of applicable guidelines",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Guideline"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/search": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Search products",
+        "description": "Search for products using query parameters",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Search query",
+            "schema": {
+              "type": "string",
+              "example": "smartphone"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Product category",
+            "schema": {
+              "type": "string",
+              "example": "smartphones"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of results",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "description": "Number of results to skip (for pagination)",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductSearchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/{id}": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Get product by ID",
+        "description": "Retrieve a specific product by its ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Product ID",
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid product ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/categories/list": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Get all categories",
+        "description": "Retrieve all available product categories",
+        "responses": {
+          "200": {
+            "description": "List of categories",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": [
+                    "smartphones",
+                    "laptops",
+                    "tablets",
+                    "beauty",
+                    "home-decoration"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/category/{category}": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Get products by category",
+        "description": "Retrieve products filtered by category",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "path",
+            "required": true,
+            "description": "Category name",
+            "schema": {
+              "type": "string",
+              "example": "smartphones"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of results",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Products in the category",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductSearchResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Failed to process message"
+          }
+        }
+      },
+      "ChatMessage": {
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant",
+              "system"
+            ],
+            "description": "The role of the message sender"
+          },
+          "content": {
+            "type": "string",
+            "description": "The message content",
+            "example": "Hello, I need help with finding a smartphone"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the message was created",
+            "example": "2025-07-10T12:00:00.000Z"
+          }
+        }
+      },
+      "ChatRequest": {
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The user's message",
+            "example": "Hello, I need help with finding a smartphone"
+          },
+          "conversation_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "ID of existing conversation (optional)",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "context": {
+            "type": "object",
+            "description": "Additional context for the message",
+            "properties": {
+              "user_intent": {
+                "type": "string",
+                "description": "The user's intent",
+                "example": "product_inquiry"
+              },
+              "conversation_stage": {
+                "type": "string",
+                "description": "Current conversation stage",
+                "example": "discovery"
+              },
+              "keywords": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Relevant keywords",
+                "example": [
+                  "smartphone",
+                  "phone"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "ChatResponse": {
+        "type": "object",
+        "required": [
+          "response",
+          "conversationId",
+          "appliedGuidelines",
+          "context"
+        ],
+        "properties": {
+          "response": {
+            "type": "string",
+            "description": "The AI-generated response",
+            "example": "Hello! I'd be happy to help you find the perfect smartphone. What features are most important to you?"
+          },
+          "conversationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the conversation",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "appliedGuidelines": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Names of guidelines that were applied",
+            "example": [
+              "Introduction Best Practices",
+              "Product Recommendation Strategy"
+            ]
+          },
+          "context": {
+            "type": "object",
+            "description": "Enhanced context including product suggestions",
+            "properties": {
+              "user_intent": {
+                "type": "string",
+                "example": "product_inquiry"
+              },
+              "conversation_stage": {
+                "type": "string",
+                "example": "introduction"
+              },
+              "keywords": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "smartphone",
+                  "help"
+                ]
+              },
+              "suggested_products": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ProductSuggestionContext"
+                }
+              },
+              "available_product_info": {
+                "type": "string",
+                "example": "Use the suggested_products data above to provide accurate product information, specifications, and pricing."
+              }
+            }
+          },
+          "smartSuggestions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductSuggestion"
+            },
+            "description": "Smart product suggestions based on context"
+          }
+        }
+      },
+      "Conversation": {
+        "type": "object",
+        "required": [
+          "id",
+          "messages",
+          "context",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Conversation ID",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChatMessage"
+            },
+            "description": "All messages in the conversation"
+          },
+          "context": {
+            "type": "object",
+            "description": "Conversation context"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-07-10T12:00:00.000Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-07-10T12:30:00.000Z"
+          }
+        }
+      },
+      "Guideline": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "content",
+          "priority",
+          "category",
+          "is_active",
+          "tags",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Guideline ID",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "name": {
+            "type": "string",
+            "description": "Guideline name",
+            "example": "Handle Pricing Objections"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "Guideline description",
+            "example": "Guidelines for responding to price-related concerns"
+          },
+          "content": {
+            "type": "string",
+            "description": "The actual guideline content",
+            "example": "When a prospect mentions price concerns, acknowledge their budget constraints, then pivot to value proposition."
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10,
+            "description": "Priority level (1-10, higher is more important)",
+            "example": 9
+          },
+          "category": {
+            "type": "string",
+            "description": "Guideline category",
+            "example": "objection_handling"
+          },
+          "is_active": {
+            "type": "boolean",
+            "description": "Whether the guideline is active",
+            "example": true
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Tags for categorization",
+            "example": [
+              "pricing",
+              "objections",
+              "value"
+            ]
+          },
+          "conditions": {
+            "type": "object",
+            "nullable": true,
+            "description": "Conditions for when this guideline applies",
+            "properties": {
+              "user_intent": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "pricing_inquiry",
+                  "objection_handling"
+                ]
+              },
+              "conversation_stage": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "discovery",
+                  "negotiation"
+                ]
+              },
+              "context_keywords": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "price",
+                  "cost",
+                  "expensive",
+                  "budget"
+                ]
+              }
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-07-10T12:00:00.000Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-07-10T12:00:00.000Z"
+          }
+        }
+      },
+      "CreateGuideline": {
+        "type": "object",
+        "required": [
+          "name",
+          "content"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Guideline name",
+            "example": "Handle Pricing Objections"
+          },
+          "description": {
+            "type": "string",
+            "description": "Guideline description",
+            "example": "Guidelines for responding to price-related concerns"
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The actual guideline content",
+            "example": "When a prospect mentions price concerns, acknowledge their budget constraints, then pivot to value proposition."
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10,
+            "default": 5,
+            "description": "Priority level (1-10, higher is more important)"
+          },
+          "category": {
+            "type": "string",
+            "default": "general",
+            "description": "Guideline category",
+            "example": "objection_handling"
+          },
+          "is_active": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether the guideline is active"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [],
+            "description": "Tags for categorization",
+            "example": [
+              "pricing",
+              "objections"
+            ]
+          },
+          "conditions": {
+            "type": "object",
+            "description": "Conditions for when this guideline applies",
+            "properties": {
+              "user_intent": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "conversation_stage": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "context_keywords": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "UpdateGuideline": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Guideline name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Guideline description"
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The actual guideline content"
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10,
+            "description": "Priority level (1-10, higher is more important)"
+          },
+          "category": {
+            "type": "string",
+            "description": "Guideline category"
+          },
+          "is_active": {
+            "type": "boolean",
+            "description": "Whether the guideline is active"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Tags for categorization"
+          },
+          "conditions": {
+            "type": "object",
+            "description": "Conditions for when this guideline applies",
+            "properties": {
+              "user_intent": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "conversation_stage": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "context_keywords": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "price",
+          "category"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Product ID",
+            "example": 1
+          },
+          "title": {
+            "type": "string",
+            "description": "Product title",
+            "example": "iPhone 15 Pro"
+          },
+          "description": {
+            "type": "string",
+            "description": "Product description",
+            "example": "Latest iPhone with advanced camera system"
+          },
+          "price": {
+            "type": "number",
+            "format": "float",
+            "description": "Product price",
+            "example": 999.99
+          },
+          "discountPercentage": {
+            "type": "number",
+            "format": "float",
+            "description": "Discount percentage",
+            "example": 5.5
+          },
+          "rating": {
+            "type": "number",
+            "format": "float",
+            "description": "Product rating",
+            "example": 4.8
+          },
+          "stock": {
+            "type": "integer",
+            "description": "Stock quantity",
+            "example": 50
+          },
+          "brand": {
+            "type": "string",
+            "description": "Product brand",
+            "example": "Apple"
+          },
+          "category": {
+            "type": "string",
+            "description": "Product category",
+            "example": "smartphones"
+          },
+          "thumbnail": {
+            "type": "string",
+            "format": "uri",
+            "description": "Product thumbnail URL",
+            "example": "https://example.com/thumbnail.jpg"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "Product images",
+            "example": [
+              "https://example.com/image1.jpg",
+              "https://example.com/image2.jpg"
+            ]
+          }
+        }
+      },
+      "ProductSearchResponse": {
+        "type": "object",
+        "required": [
+          "products",
+          "total",
+          "skip",
+          "limit"
+        ],
+        "properties": {
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Product"
+            },
+            "description": "Array of products"
+          },
+          "total": {
+            "type": "integer",
+            "description": "Total number of products found",
+            "example": 150
+          },
+          "skip": {
+            "type": "integer",
+            "description": "Number of products skipped",
+            "example": 0
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of products returned",
+            "example": 20
+          }
+        }
+      },
+      "ProductSuggestion": {
+        "type": "object",
+        "required": [
+          "product",
+          "reason",
+          "confidence",
+          "type"
+        ],
+        "properties": {
+          "product": {
+            "$ref": "#/components/schemas/Product"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Reason for the suggestion",
+            "example": "Matches your interest in smartphones"
+          },
+          "confidence": {
+            "type": "number",
+            "format": "float",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Confidence score for the suggestion",
+            "example": 0.85
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "keyword",
+              "intent",
+              "stage",
+              "popular",
+              "related"
+            ],
+            "description": "Type of suggestion",
+            "example": "keyword"
+          }
+        }
+      },
+      "ProductSuggestionContext": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "price",
+          "reason",
+          "confidence"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Product ID",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "Product name",
+            "example": "iPhone 15 Pro"
+          },
+          "price": {
+            "type": "string",
+            "description": "Formatted price",
+            "example": "$999.99"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "Product description"
+          },
+          "rating": {
+            "type": "number",
+            "format": "float",
+            "nullable": true,
+            "description": "Product rating"
+          },
+          "category": {
+            "type": "string",
+            "description": "Product category",
+            "example": "smartphones"
+          },
+          "brand": {
+            "type": "string",
+            "nullable": true,
+            "description": "Product brand"
+          },
+          "stock": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Stock quantity"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Reason for the suggestion",
+            "example": "Matches your interest in smartphones"
+          },
+          "confidence": {
+            "type": "number",
+            "format": "float",
+            "description": "Confidence score",
+            "example": 0.85
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token for authentication (when implemented)"
+      },
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "API key for authentication (when implemented)"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Health check endpoints"
+    },
+    {
+      "name": "Documentation",
+      "description": "API documentation endpoints"
+    },
+    {
+      "name": "Chat",
+      "description": "Chat and conversation management"
+    },
+    {
+      "name": "Guidelines",
+      "description": "Behavioral guideline management"
+    },
+    {
+      "name": "Products",
+      "description": "Product search and information"
+    }
+  ],
+  "externalDocs": {
+    "description": "Find more info in the project README",
+    "url": "https://github.com/your-repo/guideline-aware-ai-agent#readme"
+  }
+}

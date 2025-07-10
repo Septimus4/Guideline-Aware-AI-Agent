@@ -198,6 +198,54 @@ See: [TESTING.md](https://github.com/Septimus4/Guideline-Aware-AI-Agent/blob/mai
 * `GET /health`
 * `GET /` – API docs
 
+## 📋 API Documentation
+
+The project includes comprehensive OpenAPI 3.0.3 specification documentation:
+
+### Available Formats
+- **YAML**: `openapi.yaml` - Human-readable format
+- **JSON**: `openapi.json` - Machine-readable format
+
+### API Endpoints
+
+#### Chat & Conversations
+- `POST /api/chat/message` - Process chat messages with AI responses
+- `GET /api/chat/conversation/{id}` - Retrieve conversation history
+
+#### Guidelines Management  
+- `GET /api/guidelines` - List all guidelines (with filtering)
+- `POST /api/guidelines` - Create new guideline
+- `GET /api/guidelines/{id}` - Get specific guideline
+- `PUT /api/guidelines/{id}` - Update guideline
+- `DELETE /api/guidelines/{id}` - Delete guideline
+- `POST /api/guidelines/applicable` - Get applicable guidelines for context
+
+#### Product Search
+- `GET /api/products/search` - Search products with query parameters
+- `GET /api/products/{id}` - Get specific product details
+- `GET /api/products/categories/list` - List all product categories
+- `GET /api/products/category/{category}` - Get products by category
+
+### Documentation Commands
+
+```bash
+# Generate JSON from YAML
+npm run docs:openapi
+
+# Serve interactive documentation (requires swagger-ui-serve)
+npm run docs:serve
+
+# Or use online tools
+# Paste openapi.yaml content into: https://editor.swagger.io/
+```
+
+### Key Features
+- Complete request/response schemas
+- Error handling documentation
+- Example requests and responses
+- Authentication schemas (ready for implementation)
+- Comprehensive data models for all entities
+
 ## 🤝 Contributing
 
 This is an MVP prototype for demonstrating guideline-aware AI agents.

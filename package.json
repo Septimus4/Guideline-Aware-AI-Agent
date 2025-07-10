@@ -16,7 +16,9 @@
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --coverage --watchAll=false",
     "lint": "eslint src/**/*.ts --max-warnings=50",
-    "lint:fix": "eslint src/**/*.ts --fix"
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "docs:openapi": "node -e \"const yaml = require('js-yaml'); const fs = require('fs'); const doc = yaml.load(fs.readFileSync('openapi.yaml', 'utf8')); fs.writeFileSync('openapi.json', JSON.stringify(doc, null, 2));\"",
+    "docs:serve": "npx swagger-ui-serve openapi.yaml"
   },
   "keywords": [
     "ai",
