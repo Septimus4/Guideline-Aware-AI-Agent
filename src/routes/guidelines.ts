@@ -1,5 +1,4 @@
 import express from 'express';
-import cors from 'cors';
 import { GuidelineService } from '../services/GuidelineService';
 import { CreateGuidelineSchema, UpdateGuidelineSchema } from '../types';
 

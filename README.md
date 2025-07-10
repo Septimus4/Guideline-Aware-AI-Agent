@@ -280,8 +280,122 @@ This is a prototype focused on demonstrating core concepts. For production use, 
 - Implementing authentication and authorization
 - Adding rate limiting and request validation
 - Setting up monitoring and logging
-- Creating automated tests
-- Adding proper CI/CD pipeline
+- Creating automated tests ✅
+- Adding proper CI/CD pipeline ✅e
+
+### 🧪 Testing
+
+The project includes a comprehensive testing suite with unit tests, integration tests, and automated CI/CD.
+
+#### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run tests for CI (no watch mode)
+npm run test:ci
+
+# Run linting
+npm run lint
+
+# Fix linting issues automatically
+npm run lint:fix
+```
+
+#### Test Structure
+
+- **Unit Tests**: Located in `tests/services/` and `tests/routes/`
+  - Test individual service methods and API endpoints
+  - Use mocking to isolate components
+  - Fast execution and comprehensive coverage
+
+- **Integration Tests**: Located in `tests/integration/`
+  - Test complete API workflows
+  - Verify service interactions
+  - Can be run against real or test databases
+
+#### Testing Stack
+
+- **Jest**: Test runner and assertion library
+- **Supertest**: HTTP assertion library for API testing
+- **TypeScript**: Full TypeScript support in tests
+- **Coverage**: Istanbul code coverage reporting
+
+### 🚀 CI/CD Pipeline
+
+The project includes GitHub Actions workflows for automated testing, building, and deployment.
+
+#### Workflows
+
+1. **CI/CD Pipeline** (`.github/workflows/ci-cd.yml`)
+   - Runs on every push to `main` and `develop` branches
+   - Executes tests across multiple Node.js versions (18.x, 20.x)
+   - Performs security audits
+   - Builds the application
+   - Deploys to staging (develop branch) and production (main branch)
+
+2. **Integration Tests** (`.github/workflows/integration-tests.yml`)
+   - Runs daily integration tests
+   - Uses real PostgreSQL database for testing
+   - Creates GitHub issues if tests fail
+
+#### Pipeline Stages
+
+1. **Test & Lint**
+   - Install dependencies
+   - Run ESLint for code quality
+   - Execute Jest test suite
+   - Upload coverage reports
+
+2. **Build & Validate**
+   - Build TypeScript application
+   - Validate build artifacts
+   - Test production build
+
+3. **Security Audit**
+   - Run npm audit for vulnerabilities
+   - Check dependencies with audit-ci
+
+4. **Deploy**
+   - Deploy to staging environment (develop branch)
+   - Deploy to production environment (main branch)
+   - Create GitHub releases for production deployments
+
+#### Setting Up CI/CD
+
+1. **Required Secrets** (GitHub Repository Settings → Secrets):
+   ```
+   OPENAI_API_KEY=your_openai_api_key
+   SUPABASE_URL=your_supabase_url
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+   ```
+
+2. **Environment Configuration**:
+   - Staging and production environments are configured in GitHub
+   - Add deployment scripts for your preferred platform (Vercel, Railway, etc.)
+
+3. **Branch Protection**:
+   - Set up branch protection rules for `main`
+   - Require status checks to pass before merging
+   - Require pull request reviews
+
+#### Deployment Platforms
+
+The CI/CD pipeline is designed to work with various deployment platforms:
+
+- **Vercel**: Frontend and serverless functions
+- **Railway**: Full-stack application deployment
+- **Heroku**: Traditional PaaS deployment
+- **AWS/Google Cloud**: Container or serverless deployment
+
+To customize for your platform, update the deployment steps in `.github/workflows/ci-cd.yml`.
 
 ---
 

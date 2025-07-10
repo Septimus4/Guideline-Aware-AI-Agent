@@ -12,7 +12,15 @@ const PORT = parseInt(process.env.PORT || '3001', 10);
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+
+// JSON parsing error handler - must come after express.json()
+app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (error instanceof SyntaxError && (error as any).status === 400 && 'body' in error) {
+    return res.status(400).json({ error: 'Invalid JSON format' });
+  }
+  next(error);
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -72,7 +80,7 @@ app.get('/', (req, res) => {
 });
 
 // Error handling middleware
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: any, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Unhandled error:', err);
   res.status(500).json({ error: 'Internal server error' });
 });

@@ -11,27 +11,46 @@
     "start": "node dist/index.js",
     "setup": "ts-node scripts/setup-database.ts",
     "setup:rls": "ts-node scripts/setup-rls.ts",
-    "test": "ts-node scripts/test-setup.ts"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:ci": "jest --ci --coverage --watchAll=false",
+    "lint": "eslint src/**/*.ts --max-warnings=50",
+    "lint:fix": "eslint src/**/*.ts --fix"
   },
-  "keywords": ["ai", "agent", "guidelines", "supabase", "typescript"],
+  "keywords": [
+    "ai",
+    "agent",
+    "guidelines",
+    "supabase",
+    "typescript"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
     "@supabase/supabase-js": "^2.39.3",
-    "express": "^4.18.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
+    "express": "^4.18.2",
     "openai": "^4.28.4",
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@types/express": "^4.17.21",
     "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.12",
     "@types/node": "^20.11.19",
-    "typescript": "^5.3.3",
-    "ts-node": "^10.9.2",
+    "@types/supertest": "^6.0.2",
+    "@typescript-eslint/eslint-plugin": "^8.36.0",
+    "@typescript-eslint/parser": "^8.36.0",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
     "nodemon": "^3.0.3",
-    "vite": "^5.1.4",
-    "concurrently": "^8.2.2"
+    "supertest": "^6.3.4",
+    "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3",
+    "vite": "^5.1.4"
   }
 }
