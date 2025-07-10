@@ -87,8 +87,9 @@ export class ConversationService {
     const messageCount = messages.filter(m => m.role === 'user').length;
 
     if (messageCount <= 1) return 'introduction';
-    if (messageCount <= 3) return 'discovery';
-    if (messageCount <= 5) return 'presentation';
+    if (messageCount <= 2) return 'discovery';
+    if (messageCount <= 4) return 'recommendation';
+    if (messageCount <= 6) return 'presentation';
     if (messageCount <= 8) return 'objection_handling';
     return 'closing';
   }

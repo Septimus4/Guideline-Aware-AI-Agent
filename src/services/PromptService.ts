@@ -31,8 +31,15 @@ PRODUCT RECOMMENDATIONS:
 - Be natural - don't force product recommendations if they don't fit the conversation
 - Focus on solving the customer's problem first, then suggest products`;
 
+    const contextText = context ? `
+
+CURRENT CONTEXT:
+${Object.entries(context)
+  .map(([key, value]) => `- ${key}: ${value}`)
+  .join('\n')}` : '';
+
     if (guidelines.length === 0) {
-      return basePrompt;
+      return basePrompt + contextText;
     }
 
     const guidelineText = guidelines
@@ -42,12 +49,6 @@ PRODUCT RECOMMENDATIONS:
    ${guideline.content}`;
       })
       .join('\n\n');
-
-    const contextText = context ? `
-CURRENT CONTEXT:
-${Object.entries(context)
-  .map(([key, value]) => `- ${key}: ${value}`)
-  .join('\n')}` : '';
 
     return `${basePrompt}
 
@@ -85,7 +86,7 @@ Remember: These guidelines are critical for successful sales interactions. Follo
       return completion.choices[0]?.message?.content || 'I apologize, but I was unable to generate a response.';
     } catch (error) {
       console.error('OpenAI API error:', error);
-      throw new Error('Failed to generate AI response');
+      throw new Error('Failed to generate response');
     }
   }
 
@@ -121,7 +122,8 @@ Remember: These guidelines are critical for successful sales interactions. Follo
       'home', 'decoration', 'furniture', 'kitchen', 'bedroom',
       'clothing', 'fashion', 'shirt', 'dress', 'shoes', 'accessories',
       'grocery', 'food', 'snacks', 'beverages', 'cooking',
-      'health', 'wellness', 'vitamins', 'supplements', 'fitness'
+      'health', 'wellness', 'vitamins', 'supplements', 'fitness',
+      'products', 'product'
     ];
 
     return words.filter(word => salesKeywords.includes(word));
@@ -129,6 +131,21 @@ Remember: These guidelines are critical for successful sales interactions. Follo
 
   private classifyIntent(message: string): string {
     const lowerMessage = message.toLowerCase();
+
+    if (!message.trim()) {
+      return 'unknown';
+    }
+
+    // Greeting patterns
+    if (lowerMessage.includes('hello') || lowerMessage.includes('hi ') || lowerMessage.includes('hey ') || 
+        lowerMessage.match(/^(hello|hi|hey)$/)) {
+      return 'greeting';
+    }
+
+    // Help patterns
+    if (lowerMessage.includes('help') || lowerMessage.includes('assistance') || lowerMessage.includes('support')) {
+      return 'help_request';
+    }
 
     if (lowerMessage.includes('price') || lowerMessage.includes('cost') || lowerMessage.includes('budget')) {
       return 'pricing_inquiry';
