@@ -57,10 +57,10 @@ router.get('/categories/list', async (req, res) => {
 // Get products by category
 router.get('/category/:category', async (req, res) => {
   try {
-    const category = req.params.category;
+    const { category } = req.params;
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
     
-    const result = await agentService.searchProducts('', limit);
+    const result = await agentService.searchProducts(category, limit);
     // Filter by category on the client side or enhance the search method
     res.json(result);
   } catch (error) {

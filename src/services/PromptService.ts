@@ -13,7 +13,11 @@ export class PromptService {
     });
   }
 
-  constructSystemPrompt(guidelines: Guideline[], context?: any): string {
+  constructSystemPrompt(guidelines: Guideline[], context?: {
+    user_intent?: string;
+    conversation_stage?: string;
+    applied_guidelines?: string[];
+  }): string {
     const basePrompt = `You are a sales-focused AI agent designed to help close deals. Your primary objective is to engage prospects, understand their needs, handle objections, and guide them toward making a purchase decision.
 
 CORE BEHAVIOR:
@@ -63,7 +67,11 @@ Remember: These guidelines are critical for successful sales interactions. Follo
   async generateResponse(
     messages: ChatMessage[],
     guidelines: Guideline[],
-    context?: any
+    context?: {
+      user_intent?: string;
+      conversation_stage?: string;
+      applied_guidelines?: string[];
+    }
   ): Promise<string> {
     const systemPrompt = this.constructSystemPrompt(guidelines, context);
 

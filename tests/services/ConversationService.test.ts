@@ -156,7 +156,11 @@ describe('ConversationService', () => {
         })
       });
 
-      const result = await conversationService.updateConversation('123', mockUpdatedMessages, { updated: true });
+      const result = await conversationService.updateConversation('123', mockUpdatedMessages, { 
+        user_intent: 'test_intent',
+        conversation_stage: 'updated',
+        applied_guidelines: ['guideline1']
+      });
 
       expect(result).toEqual(mockUpdatedConversation);
     });

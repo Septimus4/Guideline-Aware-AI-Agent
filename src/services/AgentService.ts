@@ -2,7 +2,7 @@ import { GuidelineService } from './GuidelineService';
 import { PromptService } from './PromptService';
 import { ConversationService } from './ConversationService';
 import { ProductService } from './ProductService';
-import { ChatRequest, ChatMessage, ProductSuggestion, EnhancedChatRequest } from '../types';
+import { ChatRequest, ChatMessage, ProductSuggestion, EnhancedChatRequest, Product } from '../types';
 
 export class AgentService {
   private guidelineService: GuidelineService;
@@ -21,7 +21,11 @@ export class AgentService {
     response: string;
     conversationId: string;
     appliedGuidelines: string[];
-    context: any;
+    context: {
+      user_intent?: string;
+      conversation_stage?: string;
+      applied_guidelines?: string[];
+    };
     smartSuggestions?: ProductSuggestion[];
   }> {
     try {
@@ -151,7 +155,7 @@ export class AgentService {
   }
 
   async searchProducts(query: string, limit?: number): Promise<{
-    products: any[];
+    products: Product[];
     total: number;
     skip: number;
     limit: number;
@@ -159,7 +163,7 @@ export class AgentService {
     return this.productService.searchProducts({ q: query, limit });
   }
 
-  async getProductById(id: number): Promise<any> {
+  async getProductById(id: number): Promise<Product | null> {
     return this.productService.getProductById(id);
   }
 

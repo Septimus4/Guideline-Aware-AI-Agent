@@ -44,6 +44,7 @@ jobs:
         # Run database migrations/setup for testing
         npm run setup
       env:
+        NODE_ENV: test
         SUPABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
         SUPABASE_SERVICE_ROLE_KEY: test_key
     
@@ -53,6 +54,7 @@ jobs:
         # npm run test:integration
         echo "Integration tests would run here"
       env:
+        NODE_ENV: test
         SUPABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
         SUPABASE_SERVICE_ROLE_KEY: test_key
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

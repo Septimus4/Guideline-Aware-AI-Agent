@@ -5,12 +5,18 @@ import { CreateGuidelineSchema, UpdateGuidelineSchema } from '../types';
 const router = express.Router();
 const guidelineService = new GuidelineService();
 
-// Get all guidelines
+// Get all guidelines with optional filters
 router.get('/', async (req, res) => {
   try {
     const { category, isActive, tags } = req.query;
     
-    const filters: any = {};
+    interface GuidelineFilters {
+      category?: string;
+      isActive?: boolean;
+      tags?: string[];
+    }
+    
+    const filters: GuidelineFilters = {};
     if (category) filters.category = category as string;
     if (isActive !== undefined) filters.isActive = isActive === 'true';
     if (tags) filters.tags = (tags as string).split(',');

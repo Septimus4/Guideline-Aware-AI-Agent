@@ -4,7 +4,11 @@ import { Conversation, ChatMessage } from '../types';
 export class ConversationService {
   async createConversation(
     messages: ChatMessage[],
-    context?: any
+    context?: {
+      user_intent?: string;
+      conversation_stage?: string;
+      applied_guidelines?: string[];
+    }
   ): Promise<Conversation> {
     const conversation = {
       messages,
@@ -42,7 +46,11 @@ export class ConversationService {
   async updateConversation(
     id: string,
     messages: ChatMessage[],
-    context?: any
+    context?: {
+      user_intent?: string;
+      conversation_stage?: string;
+      applied_guidelines?: string[];
+    }
   ): Promise<Conversation> {
     const updates = {
       messages,
