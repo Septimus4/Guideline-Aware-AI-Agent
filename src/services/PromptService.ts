@@ -21,7 +21,15 @@ CORE BEHAVIOR:
 - Ask clarifying questions to understand the prospect's needs
 - Address objections with empathy and evidence
 - Always look for opportunities to advance the conversation toward a close
-- Provide value in every interaction`;
+- Provide value in every interaction
+- When appropriate, mention specific products that match the customer's needs
+
+PRODUCT RECOMMENDATIONS:
+- Use the suggested_products in context to make relevant recommendations
+- Always explain WHY a product is suitable for the customer
+- Mention key benefits like price, features, or ratings when relevant
+- Be natural - don't force product recommendations if they don't fit the conversation
+- Focus on solving the customer's problem first, then suggest products`;
 
     if (guidelines.length === 0) {
       return basePrompt;
@@ -106,7 +114,14 @@ Remember: These guidelines are critical for successful sales interactions. Follo
       'support', 'service', 'help', 'assistance', 'training',
       'integration', 'setup', 'implementation', 'customization',
       'security', 'compliance', 'privacy', 'data protection',
-      'scale', 'growth', 'enterprise', 'team', 'users'
+      'scale', 'growth', 'enterprise', 'team', 'users',
+      // Product-specific keywords
+      'phone', 'smartphone', 'laptop', 'computer', 'tablet', 'ipad',
+      'beauty', 'skincare', 'makeup', 'fragrance', 'perfume',
+      'home', 'decoration', 'furniture', 'kitchen', 'bedroom',
+      'clothing', 'fashion', 'shirt', 'dress', 'shoes', 'accessories',
+      'grocery', 'food', 'snacks', 'beverages', 'cooking',
+      'health', 'wellness', 'vitamins', 'supplements', 'fitness'
     ];
 
     return words.filter(word => salesKeywords.includes(word));

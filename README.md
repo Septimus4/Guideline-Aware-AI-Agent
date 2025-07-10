@@ -2,14 +2,29 @@
 
 A TypeScript-based AI agent that dynamically incorporates behavioral guidelines into its responses based on context and conversation state. The agent pulls guidelines from a Supabase database and constructs personalized system prompts to provide contextually appropriate sales interactions.
 
+## ✨ NEW FEATURES
+
+### 🛍️ DummyJSON Products Integration
+- **Live Product Data**: Integrated with DummyJSON API for real product information
+- **Product Search**: Search across 100+ products in multiple categories
+- **Categories**: Beauty, Electronics, Fashion, Home, and more
+
+### 🎯 Smart Suggestions
+- **Context-Aware Recommendations**: AI suggests relevant products based on conversation
+- **Multi-Factor Analysis**: Considers user intent, keywords, conversation stage
+- **Confidence Scoring**: Each suggestion includes relevance confidence (0-100%)
+- **Interactive Product Cards**: Click to view detailed product information
+
 ## 🎯 What It Does
 
 This MVP demonstrates a sales-focused AI agent that:
 
 - **Dynamically applies behavioral guidelines** from a database based on conversation context
 - **Adapts responses** according to user intent, conversation stage, and detected keywords
+- **Suggests relevant products** using smart recommendation engine
+- **Provides real-time product information** from DummyJSON API
 - **Manages conversation state** and applies guidelines with priority-based selection
-- **Provides a real-time chat interface** with visibility into applied guidelines and context
+- **Provides a real-time chat interface** with visibility into applied guidelines, context, and product suggestions
 
 ## 🏗️ Technical Architecture
 
@@ -196,6 +211,47 @@ curl -X POST http://localhost:3001/api/chat/message \
   }'
 ```
 
+## 🧪 Testing the New Features
+
+### Test Smart Suggestions
+
+```bash
+# 1. Start the servers
+npm run dev
+
+# 2. Visit http://localhost:3000 for the web interface
+
+# 3. Try these example messages:
+- "I need a smartphone for photography"
+- "Looking for beauty products" 
+- "Compare laptops for work"
+- "What are your most affordable products?"
+
+# 4. Watch for Smart Suggestions panel on the left showing:
+- Product recommendations
+- Confidence scores (0-100%)
+- Reasons for suggestions
+- Interactive product cards
+```
+
+### Test Product API Directly
+
+```bash
+# Search for products
+curl "http://localhost:3001/api/products/search?q=smartphone&limit=3"
+
+# Get specific product
+curl "http://localhost:3001/api/products/1"
+
+# Get all categories
+curl "http://localhost:3001/api/products/categories/list"
+
+# Test chat with suggestions
+curl -X POST "http://localhost:3001/api/chat/message" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "I need a smartphone for photography"}'
+```
+
 ## 📋 Key Features Demonstrated
 
 ### 1. **Dynamic Guideline Selection**
@@ -264,8 +320,15 @@ curl -X POST http://localhost:3001/api/chat/message \
 
 ### Chat Endpoints
 
-- `POST /api/chat/message` - Send message to agent
+- `POST /api/chat/message` - Send message to agent (now returns smartSuggestions)
 - `GET /api/chat/conversation/:id` - Get conversation history
+
+### Products Endpoints ✨ NEW
+
+- `GET /api/products/search` - Search products (query: q, limit, skip, category)
+- `GET /api/products/:id` - Get product by ID
+- `GET /api/products/categories/list` - Get all product categories
+- `GET /api/products/category/:category` - Get products by category
 
 ### Utility Endpoints
 

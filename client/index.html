@@ -190,6 +190,65 @@
             margin-bottom: 4px;
         }
 
+        .suggestions-section {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            border-left: 4px solid #28a745;
+        }
+
+        .suggestions-section h4 {
+            color: #28a745;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .product-suggestion {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .product-suggestion:hover {
+            border-color: #007bff;
+            box-shadow: 0 2px 4px rgba(0,123,255,0.1);
+        }
+
+        .product-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+        }
+
+        .product-price {
+            color: #28a745;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .product-reason {
+            font-size: 0.8rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        .product-confidence {
+            background: #e9ecef;
+            color: #495057;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            float: right;
+        }
+
         .loading {
             display: flex;
             align-items: center;
@@ -228,6 +287,11 @@
             <div class="context-info" id="contextInfo" style="display: none;">
                 <h4>🎯 Current Context</h4>
                 <div id="contextDetails"></div>
+            </div>
+
+            <div class="suggestions-section" id="suggestionsSection" style="display: none;">
+                <h4>✨ Smart Suggestions</h4>
+                <div id="productSuggestions"></div>
             </div>
         </div>
 
@@ -350,8 +414,9 @@
                 // Add assistant response
                 addMessage(result.response, 'assistant');
                 
-                // Update context info
+                // Update context info and smart suggestions
                 updateContextInfo(result.context, result.appliedGuidelines);
+                updateSmartSuggestions(result.smartSuggestions);
                 
             } catch (error) {
                 console.error('Error sending message:', error);
@@ -406,6 +471,62 @@
                 contextInfo.style.display = 'block';
             }
         }
+
+        function updateSmartSuggestions(suggestions) {
+            const suggestionsSection = document.getElementById('suggestionsSection');
+            const suggestionsContainer = document.getElementById('productSuggestions');
+            
+            if (!suggestions || suggestions.length === 0) {
+                suggestionsSection.style.display = 'none';
+                return;
+            }
+            
+            let html = '';
+            suggestions.forEach(suggestion => {
+                const confidencePercent = Math.round(suggestion.confidence * 100);
+                html += `
+                    <div class="product-suggestion" onclick="viewProduct(${suggestion.product.id})">
+                        <div class="product-title">
+                            ${suggestion.product.title}
+                            <span class="product-confidence">${confidencePercent}% match</span>
+                        </div>
+                        <div class="product-price">$${suggestion.product.price}</div>
+                        <div class="product-reason">${suggestion.reason}</div>
+                    </div>
+                `;
+            });
+            
+            suggestionsContainer.innerHTML = html;
+            suggestionsSection.style.display = 'block';
+        }
+
+        async function viewProduct(productId) {
+            try {
+                const response = await fetch(`${API_BASE}/products/${productId}`);
+                if (response.ok) {
+                    const product = await response.json();
+                    showProductModal(product);
+                }
+            } catch (error) {
+                console.error('Error fetching product:', error);
+            }
+        }
+
+        function showProductModal(product) {
+            // Simple product modal - in a real app, you'd create a proper modal
+            const modalContent = `
+                🛍️ ${product.title}
+                💰 Price: $${product.price}
+                ⭐ Rating: ${product.rating}/5
+                📦 Stock: ${product.stock} units
+                🏷️ Category: ${product.category}
+                
+                ${product.description}
+            `;
+            alert(modalContent);
+        }
+
+        // ...existing code...
     </script>
 </body>
 </html>

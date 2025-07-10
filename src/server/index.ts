@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import guidelineRoutes from '../routes/guidelines';
 import chatRoutes from '../routes/chat';
+import productRoutes from '../routes/products';
 
 // Load environment variables
 dotenv.config();
@@ -30,6 +31,7 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/guidelines', guidelineRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/products', productRoutes);
 
 // Root endpoint with API documentation
 app.get('/', (req, res) => {
@@ -49,6 +51,12 @@ app.get('/', (req, res) => {
       chat: {
         'POST /api/chat/message': 'Send message to AI agent',
         'GET /api/chat/conversation/:id': 'Get conversation history'
+      },
+      products: {
+        'GET /api/products/search': 'Search products (query: q, limit, skip, category)',
+        'GET /api/products/:id': 'Get product by ID',
+        'GET /api/products/categories/list': 'Get all product categories',
+        'GET /api/products/category/:category': 'Get products by category'
       },
       utility: {
         'GET /health': 'Health check endpoint'

@@ -1,24 +1,28 @@
 import { GuidelineService } from './GuidelineService';
 import { PromptService } from './PromptService';
 import { ConversationService } from './ConversationService';
-import { ChatRequest, ChatMessage } from '../types';
+import { ProductService } from './ProductService';
+import { ChatRequest, ChatMessage, ProductSuggestion, EnhancedChatRequest } from '../types';
 
 export class AgentService {
   private guidelineService: GuidelineService;
   private promptService: PromptService;
   private conversationService: ConversationService;
+  private productService: ProductService;
 
   constructor() {
     this.guidelineService = new GuidelineService();
     this.promptService = new PromptService();
     this.conversationService = new ConversationService();
+    this.productService = new ProductService();
   }
 
-  async processMessage(request: ChatRequest): Promise<{
+  async processMessage(request: ChatRequest | EnhancedChatRequest): Promise<{
     response: string;
     conversationId: string;
     appliedGuidelines: string[];
     context: any;
+    smartSuggestions?: ProductSuggestion[];
   }> {
     try {
       // Extract context from the user message
@@ -56,11 +60,30 @@ export class AgentService {
       // Get applicable guidelines based on context
       const applicableGuidelines = await this.guidelineService.getApplicableGuidelines(fullContext);
       
-      // Generate AI response
+      // Generate smart product suggestions
+      const smartSuggestions = await this.generateSmartSuggestions({
+        userMessage: request.message,
+        conversationStage,
+        userIntent: fullContext.userIntent,
+        keywords: fullContext.keywords,
+        productContext: 'product_context' in request ? request.product_context : undefined
+      });
+
+      // Enhance context with product information for AI response
+      const enhancedContext = {
+        ...fullContext,
+        suggested_products: smartSuggestions?.slice(0, 3).map(s => ({
+          name: s.product.title,
+          price: s.product.price,
+          reason: s.reason
+        }))
+      };
+      
+      // Generate AI response with product awareness
       const aiResponse = await this.promptService.generateResponse(
         messages,
         applicableGuidelines,
-        fullContext
+        enhancedContext
       );
 
       // Add assistant message
@@ -84,7 +107,7 @@ export class AgentService {
         conversation = await this.conversationService.createConversation(
           messages,
           {
-            ...fullContext,
+            ...enhancedContext,
             applied_guidelines: appliedGuidelineIds
           }
         );
@@ -94,7 +117,8 @@ export class AgentService {
         response: aiResponse,
         conversationId: conversation.id!,
         appliedGuidelines: applicableGuidelines.map(g => g.name),
-        context: fullContext
+        context: enhancedContext,
+        smartSuggestions
       };
 
     } catch (error) {
@@ -103,7 +127,43 @@ export class AgentService {
     }
   }
 
+  private async generateSmartSuggestions(context: {
+    userMessage?: string;
+    conversationStage?: string;
+    userIntent?: string;
+    keywords?: string[];
+    productContext?: {
+      interested_products?: number[];
+      viewed_products?: number[];
+      search_history?: string[];
+    };
+  }): Promise<ProductSuggestion[]> {
+    try {
+      return await this.productService.generateSmartSuggestions(context);
+    } catch (error) {
+      console.error('Error generating smart suggestions:', error);
+      return [];
+    }
+  }
+
   async getConversationHistory(conversationId: string) {
     return this.conversationService.getConversation(conversationId);
+  }
+
+  async searchProducts(query: string, limit?: number): Promise<{
+    products: any[];
+    total: number;
+    skip: number;
+    limit: number;
+  }> {
+    return this.productService.searchProducts({ q: query, limit });
+  }
+
+  async getProductById(id: number): Promise<any> {
+    return this.productService.getProductById(id);
+  }
+
+  async getProductCategories(): Promise<string[]> {
+    return this.productService.getCategories();
   }
 }
