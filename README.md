@@ -1,6 +1,6 @@
 # AI Shopping Assistant Platform
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Septimus4/Guideline-Aware-AI-Agent)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Septimus4/Guideline-Aware-AI-Shop-Assistant)
 
 A sophisticated TypeScript-based AI shopping assistant that helps customers browse, choose, and purchase products online. The platform combines intelligent product recommendations with guideline-driven conversations to create personalized shopping experiences that drive customer satisfaction and sales conversions.
 
